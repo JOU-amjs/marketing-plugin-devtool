@@ -1,0 +1,87 @@
+@import './color.scss';
+@import './font.scss';
+@import './layout.scss';
+@import './mixins.scss';
+@import './extend.scss';
+
+
+// 全局通用class
+/* flex */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.align-center {
+  align-items: center !important;
+}
+.align-left {
+  align-items: flex-start !important;
+}
+.align-right {
+  align-items: flex-end !important;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-right {
+  justify-content: flex-end;
+}
+
+/* 文本样式 */
+.title-1 {
+  font-size: $font-title-1;
+  font-weight: bolder;
+}
+.title-2 {
+  font-size: $font-title-2;
+  font-weight: bolder;
+}
+.title-3 {
+  font-size: $font-title-3;
+  font-weight: bolder;
+}
+.title-4 {
+  font-size: $font-title-4;
+  font-weight: bolder;
+}
+.text {
+  font-size: $font-text;
+}
+.text-secondary {
+  font-size: $font-text-secondary;
+}
+.text-auxiliary {
+  font-size: $font-auxiliary;
+}
+.text-explain {
+  font-size: $font-explain;
+}
+
+/* 颜色 */
+.color-main {
+  color: $color-main;
+}
+.color-main-shallow {
+  color: $color-main-shallow;
+}
+.color-gray-4 {
+  color: $color-gray-4;
+}
+.color-gray-3 {
+  color: $color-gray-3;
+}
+.color-gray-2 {
+  color: $color-gray-2;
+}
+
+/* 小细节部分 */
+.clickable {
+  padding: $clickable-padding-10;
+}

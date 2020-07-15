@@ -1,0 +1,19 @@
+/* 布局样式相关 */
+
+/* ********************************* */
+/* 40圆角值，一般用在圆角度很大的<view>上面 */
+$b-rds-40: 22px;
+
+/* 10圆角值 */
+$b-rds-10: 5px;
+
+/* 可点击区域需设置padding：10px */
+$clickable-padding-10: 5px;
+
+/* 分割线样式 */
+$separator: solid 0.5px #F1F1F1;
+
+/* 页面内容和屏幕的边距 */
+$page-margin-width: 8px;
+
+$background-color-gradient: linear-gradient(to right, $color-main-shallow, $color-main);

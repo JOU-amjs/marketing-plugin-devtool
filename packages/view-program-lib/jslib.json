@@ -1,0 +1,11 @@
+{
+  "name": "view-program-lib",
+  "npmname": "view-program-lib",
+  "umdname": "view-program-lib",
+  "username": "JOU amjs",
+  "type": "ts",
+  "module": "umd,esm,commonjs",
+  "test": "mocha",
+  "lang": "zh",
+  "version": "1.6.0"
+}

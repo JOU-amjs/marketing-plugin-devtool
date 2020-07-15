@@ -1,0 +1,42 @@
+
+/* 渐变主色(深)，通常是渐变主色的右侧部分 */
+$color-main: #ff0047;
+
+/* 渐变主色(浅)，通常是渐变主色的左侧部分 */
+$color-main-shallow: #ff5f58;
+
+/****** 灰色按等级由浅到深，一般用在标题、正文、说明内容等文本内 *****/
+$color-gray-bg: #F5F5F5;
+
+/* 1级灰色（最浅），该灰色一般用于背景为灰色的地方，如餐厅动态页的定位背景样式 */
+$color-gray-1: #CCCCCC;
+
+/* 2级灰色（浅） */
+$color-gray-2: #999999;
+
+/* 3级灰色（中） */
+$color-gray-3: #666666;
+
+/* 4级灰色（深） */
+$color-gray-4: #333333;
+
+/* 成功绿 */
+$color-success-green: #60CC1C;
+
+// 金色，用于文本
+$color-golden: #edcb88;
+
+// 金色背景，一般与金色文字并用
+$color-golden-bg: #fff8e9;
+
+:export {
+  colorMain: $color-main;
+  colorMainShallow: $color-main-shallow;
+  colorGray1: $color-gray-1;
+  colorGray2: $color-gray-2;
+  colorGray3: $color-gray-3;
+  colorGray4: $color-gray-4;
+  colorSuccessGreen: $color-success-green;
+  colorGolden: $color-golden;
+  colorGoldenBg: $color-golden-bg;
+}

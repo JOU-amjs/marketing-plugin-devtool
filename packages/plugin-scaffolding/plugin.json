@@ -1,0 +1,19 @@
+{
+  "name": "{{ pluginName }}",
+  "developer": {
+    "id": "{{ devId }}",
+    "secret": "{{ devSecret }}"
+  },
+  "icon": "./icon.png",
+  "cover": "./cover.png",
+  "onlinePages": [
+    { "path": "index" },
+    { "path": "rank" }
+  ],
+  "database": {
+    "env": "development",
+    "collection": [
+      "{{ collectionNames }}"
+    ]
+  }
+}

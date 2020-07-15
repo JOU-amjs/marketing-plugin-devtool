@@ -1,0 +1,20 @@
+{
+  "name": "中文插件名",
+  "developer": {
+    "id": "service@ycsh6.com",
+    "secret": "dc07c60132a3077f56222ed178cab0c2"
+  },
+  "icon": "./icon.png",
+  "cover": "./cover.png",
+  "onlinePages": [
+    { "path": "pages/index" },
+    { "path": "pages/rank" }
+  ],
+  "database": {
+    "env": "development",
+    "collection": [
+      "user",
+      "rank"
+    ]
+  }
+}
