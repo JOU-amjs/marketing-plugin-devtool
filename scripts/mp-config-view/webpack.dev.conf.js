@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-13 13:39:31
+ * @LastEditTime: 2020-07-16 09:18:43
  */
 'use strict'
 const path = require('path');
@@ -12,7 +12,7 @@ const localApis = require('./local-apis');
 
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
-  entry: paths.configView,
+  entry: paths.configView(),
   output: {
     path: paths.cacheDirectory,
     filename: 'config-view.js',
@@ -20,7 +20,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
-      '@': paths.offlineDirectory,
+      '@': paths.offlineDirectory(),
     }
   },
   externals: {
@@ -44,7 +44,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [paths.offlineDirectory]
+        include: [paths.offlineDirectory()]
       },
       {
         test: /\.css$/,

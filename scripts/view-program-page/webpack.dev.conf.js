@@ -9,12 +9,12 @@ const webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const { paths, moduleUrls } = require('../../config');
 const localApis = require('./local-apis');
-const pluginConfig = require(paths.pluginFile);
+const pluginConfig = require(paths.pluginFile());
 const entryObject = {};
 
 // 使用plugin.json内的onlinePages进行编译和监听
 (pluginConfig.onlinePages || []).forEach(({ path }) => {
-  entryObject[path] = `${paths.onlineDirectory}/pages/${path}/index.js`;
+  entryObject[path] = `${paths.onlineDirectory()}/pages/${path}/index.js`;
 });
 
 
@@ -37,7 +37,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
-      '@': paths.onlineDirectory,
+      '@': paths.onlineDirectory(),
     }
   },
   // externals: {
@@ -61,7 +61,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [paths.offlineDirectory]
+        include: [paths.offlineDirectory()]
       },
       {
         test: /\.css$/,

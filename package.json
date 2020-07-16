@@ -12,6 +12,7 @@
     "el": "bin/el.js"
   },
   "dependencies": {
+    "art-template": "^4.13.2",
     "autoprefixer": "^7.1.2",
     "babel-core": "^6.22.1",
     "babel-eslint": "^7.1.1",
@@ -24,6 +25,7 @@
     "compare-versions": "^3.6.0",
     "concurrently": "^5.2.0",
     "css-loader": "^3.6.0",
+    "download-git-repo": "^3.0.2",
     "express": "^4.17.1",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",

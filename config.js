@@ -1,33 +1,30 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 12:34:30
+ * @LastEditTime: 2020-07-16 09:16:32
  */ 
 const path = require('path');
-const { readFileSync } = require('fs');
 const cacheDir = path.join(__dirname, './__cache');
-const cwdfile = path.join(cacheDir, './cwd');
-const getCwdpath = () => readFileSync(cwdfile, { encoding: 'utf-8' });
 
 exports.paths = {
   cacheDirectory: cacheDir,
-  cwdfile,
-  cwdpath: getCwdpath(),
+  scaffolding: process.cwd(),
   devtool: __dirname,
-  configViewDirectory: `${getCwdpath()}/config-view`,
-  configView: `${getCwdpath()}/config-view/index.vue`,
+  configViewDirectory: () => `${process.cwd()}/config-view`,
+  configView: () => `${process.cwd()}/config-view/index.vue`,
   tempCompiledConfigView: path.join(cacheDir, './config-view.js'),
-  offlineDirectory: `${getCwdpath()}/offline`,
-  offline: `${getCwdpath()}/offline/index.js`,
-  onlineDirectory: `${getCwdpath()}/online`,
+  offlineDirectory: () => `${process.cwd()}/offline`,
+  offline: () => `${process.cwd()}/offline/index.js`,
+  onlineDirectory: () => `${process.cwd()}/online`,
   mockConfigData: path.join(__dirname, './mocks/config-data.json'),
   buildDist: path.join(__dirname, './dist'),
-  pluginFile: `${getCwdpath()}/plugin.json`,
+  pluginFile: () => `${process.cwd()}/plugin.json`,
   scaffoldingMock: {
-    shopInfo: `${getCwdpath()}/mocks/shop-info.js`,
-    userInfo: `${getCwdpath()}/mocks/shop-info.js`,
-    couponInfo: `${getCwdpath()}/mocks/shop-info.js`,
-  }
+    shopInfo: () => `${process.cwd()}/mocks/shop-info.js`,
+    userInfo: () => `${process.cwd()}/mocks/shop-info.js`,
+    couponInfo: () => `${process.cwd()}/mocks/shop-info.js`,
+  },
+  scaffoldingTemplate: path.join(__dirname, './packages/plugin-scaffolding'),
 };
 
 const distPath = path.join(__dirname, 'dist-program-views');

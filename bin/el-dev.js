@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 09:17:57
+ * @LastEditTime: 2020-07-16 09:17:15
  */ 
 const commander = require('commander');
 const ora = require('ora');
@@ -9,8 +9,7 @@ const assert = require('assert');
 const devtoolServer = require('../scripts/devtool-server');
 const mpConfigViewServer = require('../scripts/mp-config-view');
 const pageServer = require('../scripts/view-program-page');
-const { writeFileSync } = require('fs');
-const { paths, moduleUrls } = require('../config');
+const { moduleUrls } = require('../config');
 const buildURL = require('../utils/buildURL');
 const chalk = require('chalk');
 const compareVersions = require('compare-versions');
@@ -34,7 +33,7 @@ assert.notStrictEqual(pluginEnvironment, 'offline', chalk.bgRedBright('抱歉，
 assert.strict.match(commander.runtimeEnvironment, /^dev|prod$/, '请指定正确的营销插件运行环境，可选值为`dev`或`prod`');
 
 // 将当前运行命令行的路径缓存起来
-writeFileSync(paths.cwdfile, process.cwd());
+// writeFileSync(paths.cwdfile, process.cwd());
 
 (async () => {
   let spinner = ora('启动中...\n').start();
