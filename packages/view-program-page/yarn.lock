@@ -8588,10 +8588,10 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-view-program-lib@^0.2.5:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/view-program-lib/-/view-program-lib-0.2.5.tgz#392b4e55296d48b64f0289696fc3b143325a03fc"
-  integrity sha512-nXlG9F6hRIobBOyfnPuYTh58fGB8jiZu5suG8AxR1+75co9N9TAYt8XvfQP1JLLcDq9ZSJQVrZyyvpE11tthog==
+view-program-lib@^0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/view-program-lib/-/view-program-lib-0.2.6.tgz#792fc5c5e6541509033dbd992c157726018e3fb4"
+  integrity sha512-6e1i4SqWScyQoQMI8ZcF04eIufUsZn5AxGu6M5AtL3qIW6h6S32gEJX9yn6LHG+LhppHtTZbEjfhnbG76er2NA==
   dependencies:
     axios "^0.19.2"
     ts-md5 "^1.2.7"

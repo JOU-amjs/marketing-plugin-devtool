@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-11 21:13:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-06 20:09:11
+ * @LastEditTime: 2020-07-18 10:24:25
  */
 import { IGeneralObject } from '../common/common.inter';
 import { javaRequest } from '../common/network';
@@ -54,11 +54,11 @@ function createCollectionProxy(collectionName: string, activityId: string) {
     setTimeout(() => {
       if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
         javaRequest({
-          url: '/dbtransformer', 
-          method: 'POST',
+          url: '/mongo/collections/operation', 
+          method: 'post',
           data: {
-            activityId, 
-            db: proxyObject
+            activityId,
+            db: proxyObject,
           },
         }).then(res => resolve(res), rej => reject(rej));
       }

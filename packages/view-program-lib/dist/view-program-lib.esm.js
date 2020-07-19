@@ -10,7 +10,6 @@ import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import axios from 'axios';
 import { Md5 } from 'ts-md5';
-import qs from 'qs';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -88,8 +87,8 @@ function environmentValue(envOption) {
     return envOption[pluginMode] || '';
 }
 var host = environmentValue({
-    'plugin-dev': 'https://api.ycsh6.com',
-    prod: 'http://localhost:18001',
+    'plugin-dev': 'http://localhost:18001',
+    prod: 'https://api.ycsh6.com',
 });
 var javaHost = environmentValue({
     'plugin-dev': 'http://148.70.36.197:8080',
@@ -276,9 +275,7 @@ function interceptor (request) {
         }
         Object.assign(args, { platform: platform, timestamp: timestamp });
         args.sign = createApiSign(args);
-        if (/^put|post|patch|delete$/i.test(method)) {
-            config.data = qs.stringify(args);
-        }
+        config.headers = __assign(__assign({}, (config.headers || {})), { 'Content-Type': 'application/json;charset=UTF-8' });
         if (accessToken) {
             config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;
         }
@@ -857,11 +854,11 @@ function createCollectionProxy(collectionName, activityId) {
         setTimeout(function () {
             if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
                 javaRequest({
-                    url: '/dbtransformer',
-                    method: 'POST',
+                    url: '/mongo/collections/operation',
+                    method: 'post',
                     data: {
                         activityId: activityId,
-                        db: proxyObject
+                        db: proxyObject,
                     },
                 }).then(function (res) { return resolve(res); }, function (rej) { return reject(rej); });
             }
@@ -889,10 +886,10 @@ function createNamespacedDatabase(activityId) {
     });
 }
 
-var pluginMode = getMode();
 var params = parseUrlParams(window.location.href);
 params.mpCode = parseMpCode(window.location.pathname);
 globalData.set(params);
+var pluginMode = getMode();
 if (!params.activityId || !params.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }

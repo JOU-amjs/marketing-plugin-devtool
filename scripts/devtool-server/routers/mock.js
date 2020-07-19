@@ -1,14 +1,15 @@
 /*
  * @Date: 2020-07-14 11:40:48
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 12:39:43
+ * @LastEditTime: 2020-07-19 11:54:32
  */ 
 const { writeFileSync } = require('fs');
 const { paths } = require('../../../config');
 const { Router } = require('express');
-const { readConfigData } = require('../common/utils');
+const { readConfigData, setCors } = require('../common/utils');
 const router = Router();
 
+setCors(router);
 router.get('/get_config_data', (_, res) => {
   let configValue = readConfigData();
   res.json({
@@ -20,8 +21,7 @@ router.get('/get_config_data', (_, res) => {
 // 保存配置信息
 router.post('/save_config_data', (req, res) => {
   if (req.body.configData) {
-    let parsedData = JSON.parse(req.body.configData);
-    writeFileSync(paths.mockConfigData, JSON.stringify(parsedData, null, '\t'));
+    writeFileSync(paths.mockConfigData, JSON.stringify(req.body.configData, null, '\t'));
   }
   res.end(JSON.stringify({
     code: 200,

@@ -1,18 +1,19 @@
 /*
  * @Date: 2020-07-06 15:50:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-16 09:17:15
+ * @LastEditTime: 2020-07-18 16:18:36
  */ 
 const commander = require('commander');
 const ora = require('ora');
 const assert = require('assert');
 const devtoolServer = require('../scripts/devtool-server');
-const mpConfigViewServer = require('../scripts/mp-config-view');
-const pageServer = require('../scripts/view-program-page');
+const configViewServer = require('../scripts/config-view-server');
+const onlineServer = require('../scripts/online-server');
+// const offlineServer = require('../scripts/offline-server');
 const { moduleUrls } = require('../config');
-const buildURL = require('../utils/buildURL');
+const { buildURL } = require('../common/util');
 const chalk = require('chalk');
-const compareVersions = require('compare-versions');
+const { getPluginType } = require('../common/util');
 
 commander
   .name('el')
@@ -20,34 +21,60 @@ commander
   .description('根据营销插件运行环境(线上/线下)，启动开发营销插件，可选项为`online`或`offline`')
   .option('-r --runtime-environment <env>', '插件运行环境, `dev`或`prod`，决定插件数据来源，默认为`dev`', 'dev')
   .parse();
-  
-const requiredVersion = '12.10.0';
-assert.strictEqual(
-  compareVersions.compare(process.versions.node, requiredVersion, '>='),
-  true,
-  chalk.bgRedBright(`请使用\`${requiredVersion}\`以上的node版本运行命令`)
-);
-const [ pluginEnvironment ] = commander.args;
-assert.strict.match(pluginEnvironment, /^online|offline$/, '请指定营销插件开发环境，可选项为`online`或`offline`');
-assert.notStrictEqual(pluginEnvironment, 'offline', chalk.bgRedBright('抱歉，线下插件开发功能暂未上线'));  // 临时添加
-assert.strict.match(commander.runtimeEnvironment, /^dev|prod$/, '请指定正确的营销插件运行环境，可选值为`dev`或`prod`');
 
-// 将当前运行命令行的路径缓存起来
-// writeFileSync(paths.cwdfile, process.cwd());
+const [ pluginEnvironment ] = commander.args;
+assert.strict.match(pluginEnvironment, /^online|offline$/, chalk.redBright('请指定营销插件开发环境，可选项为`online`或`offline`'));
+assert.notStrictEqual(pluginEnvironment, 'offline', chalk.redBright('抱歉，线下插件开发功能暂未上线'));  // 临时添加
+assert.strict.match(commander.runtimeEnvironment, /^dev|prod$/, chalk.redBright('请指定正确的营销插件运行环境，可选值为`dev`或`prod`'));
+
+// 将环境变量设置为对应值
+const envs = { dev: 'development', prod: 'production' };
+process.env.NODE_ENV = envs[commander.runtimeEnvironment];
 
 (async () => {
   let spinner = ora('启动中...\n').start();
-  const {
-    devtoolTemplate,
-    mpConfigView,
-    viewProgramPage,
-  } = moduleUrls;
+  const readTips = '，具体请看：' + chalk.blue('https://test.ycsh6.com/readme');
+  
+  // 根据插件类型的不同打印不同提示文字
+  const pluginTypeTips = {
+    online: {
+      name: '线上插件',
+      tips: '  如需增加插件线下扫码点餐部分，请在根目录下创建' + chalk.blue('`offline/index.js`'),
+    },
+    offline: {
+      name: '线下插件',
+      tips: '  如需增加插件线上视图部分，请在根目录下创建' + chalk.blue('`online/pages/[视图页面文件]`'),
+    },
+    'online-offline': {
+      name: '线上线下插件',
+      tips: '  此插件类型可同步餐厅线上线下的营销活动数据',
+    }
+  };
+  let pluginType = '';
+  try {
+    pluginType = getPluginType();
+  } catch (error) {
+    spinner.fail('😣启动失败，该插件线上线下两部分的目录结构均缺失' + readTips);
+    process.exit(1);
+  }
+  
+  const pluginTypeInfo = pluginTypeTips[pluginType];
   await Promise.all([
-    devtoolServer.start(devtoolTemplate.port),
-    mpConfigViewServer.start(mpConfigView.host, mpConfigView.port),
-    pageServer.start(viewProgramPage.host, viewProgramPage.port),
+    devtoolServer.start(),
+    configViewServer.start(),
+    onlineServer.start(),
   ]);
-  spinner.succeed(
-    chalk.bgGreen('success') + chalk.blue(`  启动成功，开发工具请访问：${buildURL(devtoolTemplate)}`)
+  console.log('\n\n');
+  spinner.succeed(chalk.bgGreen('SUCCESS') + chalk.green(' 启动成功🎉🎉🎉'));
+  console.log('\n');
+  console.info(
+    chalk.dim('  开发工具请访问：') + 
+    chalk.bold(
+      chalk.blue(buildURL(moduleUrls.devtoolTemplate))
+    )
   );
+  
+  console.log('\n');
+  console.log('  当前营销插件的开发类型为：' + chalk.bold(pluginTypeInfo.name));
+  console.log(pluginTypeInfo.tips + readTips);
 })();

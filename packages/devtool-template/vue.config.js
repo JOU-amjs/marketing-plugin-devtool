@@ -1,10 +1,10 @@
 /*
  * @Date: 2020-07-07 19:37:47
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 11:26:42
+ * @LastEditTime: 2020-07-19 11:39:05
  */ 
 const path = require('path');
-const { response } = require('express');
+const bodyParser = require('body-parser');
 
 module.exports = {
   lintOnSave: false,
@@ -26,8 +26,7 @@ module.exports = {
   },
   devServer: {
     before(app) {
-      const bodyParser = require('body-parser');
-      app.use(bodyParser.urlencoded({extended:false}));
+      app.use(bodyParser.json());
       app.get('/get_online_pages', (_, response) => {
         response.json({
           code: 200,

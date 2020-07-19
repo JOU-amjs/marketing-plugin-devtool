@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-06 21:28:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-14 17:49:28
+ * @LastEditTime: 2020-07-19 11:31:22
 --> 
 <template>
   <div class="container">
@@ -18,7 +18,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import request from '@/common/network/request';
 import { Mutation } from 'vuex-class';
 import { TMutationFn } from '@/store';
-import qs from 'qs';
+// import qs from 'qs';
 import { config } from '@vue/test-utils';
 
 @Component
@@ -33,9 +33,9 @@ export default class ConfigFrame extends Vue {
     let { data } = await request({
       url: '/mock/save_config_data',
       method: 'post',
-      data: qs.stringify({
-        configData: JSON.stringify(configData),
-      }),
+      data: {
+        configData,
+      },
     });
     if (data.code === 200) {
       this.updateState({ configData });

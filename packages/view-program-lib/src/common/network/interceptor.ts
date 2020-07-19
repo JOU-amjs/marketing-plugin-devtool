@@ -1,13 +1,11 @@
 /*
  * @Date: 2020-05-28 10:45:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 15:29:16
+ * @LastEditTime: 2020-07-19 11:42:57
  */
 import { AxiosInstance } from 'axios';
 import { getEnvironment, createApiSign } from '../util';
 import globalData from '../../model/global-data';
-import qs from 'qs';
-
  
 // 客户端每个接口需要统一传以下参数：
 // 1. timestamp：时间戳，用来验证接口调用时效性的
@@ -30,11 +28,11 @@ export default function (request: AxiosInstance) {
 
     Object.assign(args, { platform, timestamp });
     args.sign = createApiSign(args);
-
-    if (/^put|post|patch|delete$/i.test(method)) {
-      config.data = qs.stringify(args);
-    }
     
+    config.headers = {
+      ...(config.headers || {}),
+      'Content-Type': 'application/json;charset=UTF-8',
+    };
     // 添加headers
     if (accessToken) {
       config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;

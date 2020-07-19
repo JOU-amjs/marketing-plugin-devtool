@@ -3,10 +3,19 @@
 /*
  * @Date: 2020-07-06 11:39:29
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-06 15:52:48
+ * @LastEditTime: 2020-07-18 11:38:50
  */ 
 const commander = require('commander');
+const assert = require('assert');
+const compareVersions = require('compare-versions');
 const package = require('../package.json');
+
+const requiredVersion = '12.10.0';
+assert.strictEqual(
+  compareVersions.compare(process.versions.node, requiredVersion, '>='),
+  true,
+  chalk.bgRedBright(`请使用\`${requiredVersion}\`以上的node版本运行命令`)
+);
 
 commander
   .name('el')

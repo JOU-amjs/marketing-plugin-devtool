@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-07 00:14:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 13:10:53
+ * @LastEditTime: 2020-07-19 19:55:22
 --> 
 <template>
   <div id="container">
@@ -110,8 +110,9 @@ export default class App extends Vue {
     query.devMode = 1;
 
     // 以下是在插件开发环境下添加的数值
-    query.activityId = 0;
+    query.activityId = 1;
     query.shopId = 0;
+    query.accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudElkIjoxLCJpYXQiOjE1NzcyMzI3MDgsImV4cCI6MTYwODMzNjcwOH0.NByz-e7h5zrxRwH2ONFsvMIHtW3peFp2zG72YGN6vsg';
     return `http://localhost:18003/online/${page}#${routePath}?${query2String(query)}`;
   }
   @State('pageTitle') pageTitle!: string;

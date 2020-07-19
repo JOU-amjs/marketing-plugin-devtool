@@ -1,6 +1,6 @@
 {
   "name": "view-program-lib",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "view-program-lib是有吃生活在微信小程序的webview中运行的，用于为有吃开发者提供开放接口的js库",
   "main": "dist/view-program-lib.umd.min.js",
   "jsnext:main": "dist/view-program-lib.esm.js",

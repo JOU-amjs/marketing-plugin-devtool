@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 09:19:50
+ * @LastEditTime: 2020-07-19 11:44:14
  */
 import Page from './page';
 import * as el from './api/el';
@@ -12,13 +12,12 @@ import globalData from './model/global-data';
 import { MESSAGE_CODE } from './common/constant';
 import { parseUrlParams, parseMpCode, getMode } from './common/util';
 
-const pluginMode = getMode();
-
 /* 初始化 */
 // 解析get参数和插件标识并存储到全局对象中
 let params = parseUrlParams(window.location.href);
 params.mpCode = parseMpCode(window.location.pathname);
 globalData.set(params);
+const pluginMode = getMode();
 
 // 如果没有shopId和activityId则报错
 if (!params.activityId || !params.shopId) {
