@@ -1,15 +1,15 @@
 /*
  * @Date: 2020-07-15 12:38:10
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 12:01:41
+ * @LastEditTime: 2020-07-19 23:28:57
  */ 
 const { existsSync, readFileSync } = require('fs');
 const { paths } = require('../../../config');
 
 exports.readConfigData = () => {
   let configValue = '';
-  if (existsSync(paths.mockConfigData)) {
-    let configData = readFileSync(paths.mockConfigData) || '{}';
+  if (existsSync(paths.mockConfigData())) {
+    let configData = readFileSync(paths.mockConfigData()) || '{}';
     configValue = JSON.parse(configData);
   }
   return configValue;

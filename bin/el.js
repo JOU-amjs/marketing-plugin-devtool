@@ -3,12 +3,13 @@
 /*
  * @Date: 2020-07-06 11:39:29
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 11:38:50
+ * @LastEditTime: 2020-07-19 22:24:51
  */ 
 const commander = require('commander');
 const assert = require('assert');
 const compareVersions = require('compare-versions');
 const package = require('../package.json');
+const chalk = require('chalk');
 
 const requiredVersion = '12.10.0';
 assert.strictEqual(

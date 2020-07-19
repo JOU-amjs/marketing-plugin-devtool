@@ -21,7 +21,7 @@ router.get('/get_config_data', (_, res) => {
 // 保存配置信息
 router.post('/save_config_data', (req, res) => {
   if (req.body.configData) {
-    writeFileSync(paths.mockConfigData, JSON.stringify(req.body.configData, null, '\t'));
+    writeFileSync(paths.mockConfigData(), JSON.stringify(req.body.configData, null, '\t'));
   }
   res.end(JSON.stringify({
     code: 200,

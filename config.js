@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:24:48
+ * @LastEditTime: 2020-07-19 23:29:06
  */ 
 const { join } = require('path');
 const cacheDir = join(__dirname, './.cache');
@@ -18,7 +18,7 @@ exports.paths = {
   onlineDirectory: () => `${process.cwd()}/online`,
   assets: () => `${process.cwd()}/assets`,
   serverDirectory: () => `${process.cwd()}/server`,
-  mockConfigData: join(__dirname, './mocks/config-data.json'),
+  mockConfigData: () => `${process.cwd()}/mocks/config-data.json`,
   pluginFile: () => `${process.cwd()}/plugin.json`,
   scaffoldingMock: {
     shopInfo: () => `${process.cwd()}/mocks/shop-info.js`,

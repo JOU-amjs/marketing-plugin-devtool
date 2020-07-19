@@ -1,6 +1,6 @@
 {
   "name": "el-cli",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
   "main": "src/main.js",
   "scripts": {
@@ -11,6 +11,14 @@
   "bin": {
     "el": "bin/el.js"
   },
+  "files": [
+    "bin",
+    "common",
+    "dist-program-views",
+    "mocks",
+    "scripts",
+    "config.js"
+  ],
   "dependencies": {
     "@babel/core": "^7.10.5",
     "@babel/preset-env": "^7.10.4",

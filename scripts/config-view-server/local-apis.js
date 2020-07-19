@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-12-05 09:47:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-17 22:18:35
+ * @LastEditTime: 2020-07-19 23:28:47
  */
 const 
   { paths, moduleUrls } = require('../../config'),
@@ -18,8 +18,8 @@ module.exports = {
     let configValue;
     // 读取mock下对应名称的json数据当做模拟数据
     let { data } = await axios.get(`${buildURL(configViewUrl)}/index.js`);
-    if (fs.existsSync(paths.mockConfigData)) {
-      let configData = fs.readFileSync(paths.mockConfigData).toString() || '{}';
+    if (fs.existsSync(paths.mockConfigData())) {
+      let configData = fs.readFileSync(paths.mockConfigData()).toString() || '{}';
       configValue = JSON.parse(configData);
     }
     

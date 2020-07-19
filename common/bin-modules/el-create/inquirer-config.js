@@ -3,7 +3,7 @@ const chalk = require("chalk");
 /*
  * @Date: 2020-07-16 10:32:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 11:34:47
+ * @LastEditTime: 2020-07-19 22:40:09
  */ 
 module.exports = [
   {
@@ -50,7 +50,7 @@ module.exports = [
     name: 'collection',
     filter(input) {
       return (input || '').split(/,|，/)
-        .map(item => item.trim())
+        .map(item => `"${item.trim()}"`)
         .filter(item => item);
     }
   },
