@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-05-27 12:51:22
+ * @LastEditTime: 2020-07-20 20:06:51
  */ 
 // rollup.config.js
 // umd
@@ -31,9 +31,7 @@ module.exports = {
       browser: true,
       extensions: ['.ts', '.js']
     }),
-    commonjs({  // 将commonjs代码转为es代码
-      include: 'node_modules/**',
-    }),
+    commonjs(),
     common.getCompiler(),
     json(),   // 可允许import json文件
     replace({

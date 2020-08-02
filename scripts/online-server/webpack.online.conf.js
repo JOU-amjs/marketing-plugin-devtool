@@ -1,16 +1,15 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:08:33
+ * @LastEditTime: 2020-08-02 17:52:42
  */
 'use strict'
-const path = require('path');
-const webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const { paths, moduleUrls } = require('../../config');
 const localApis = require('./local-apis');
 const pluginConfig = require(paths.pluginFile());
 const { getEnvConfiguration } = require('./env');
+const { buildWebpackModule, getDevtool, createWebpackEnvPlugin, buildWebpackAlias } = require('../common-webpack-config');
 const envConfig = getEnvConfiguration();
 const entryObject = {};
 
@@ -38,71 +37,10 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
-    alias: {
-      '@': paths.onlineDirectory(),
-    }
+    alias: buildWebpackAlias(paths.onlineDirectory()),
   },
-  module: {
-    rules: [
-      {
-        test: /\.vue$/,
-        use: {
-          loader: 'vue-loader',
-          options: {
-            transformToRequire: {
-              video: 'src',
-              source: 'src',
-              img: 'src',
-              image: 'xlink:href',
-            }
-          }
-        }
-      },
-      {
-        test: /\.js$/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: ['@babel/plugin-transform-runtime']
-          },
-        },
-        include: [paths.onlineDirectory()]
-      },
-      {
-        test: /\.css$/,
-        use: [
-          'vue-style-loader',
-          'css-loader'
-        ]
-      },
-      {
-        test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-        loader: 'url-loader',
-        options: {
-          limit: 10000,
-          name: path.join(paths.distDirectory.online, 'img/[name]_[hash:7].[ext]'),
-        }
-      },
-      {
-        test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-        loader: 'url-loader',
-        options: {
-          limit: 10000,
-          name: path.join(paths.distDirectory.online, 'media/[name]_[hash:7].[ext]'),
-        }
-      },
-      {
-        test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-        loader: 'url-loader',
-        options: {
-          limit: 10000,
-          name: path.join(paths.distDirectory.online, 'font/[name]_[hash].[ext]'),
-        }
-      }
-    ]
-  },
-  devtool: 'inline-source-map',
+  module: buildWebpackModule([paths.onlineDirectory()], envConfig.assetsPath),
+  devtool: getDevtool(process.env.NODE_ENV),
   devServer: {
     clientLogLevel: 'warning',
     compress: true,
@@ -126,11 +64,6 @@ module.exports = {
   },
   plugins: [
     new VueLoaderPlugin(),
-    new webpack.DefinePlugin({
-      'process.env': JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV,
-        ...envConfig.envs,
-      })
-    }),
+    createWebpackEnvPlugin(envConfig.envs),
   ],
 }

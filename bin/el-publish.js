@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:38
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 13:28:28
+ * @LastEditTime: 2020-08-02 18:02:55
  */ 
 const commander = require('commander');
 const chalk = require('chalk');
@@ -17,7 +17,9 @@ const {
   createWriteStream,
   readdirSync,
   statSync,
-  createReadStream
+  createReadStream,
+  existsSync,
+  mkdirSync
 } = require('fs');
 const path = require('path');
 const { getPluginType } = require('../common/util');
@@ -96,6 +98,11 @@ try {
     }
 
     spinner = ora(chalk.dim('正在处理编译文件...')).start();
+    // 如果没有缓存目录则先创建
+    if (!existsSync(paths.cacheDirectory)) {
+      mkdirSync(paths.cacheDirectory);
+    }
+    
     let output = createWriteStream(paths.compiledZipFile);
     let archiveObj = archiver('zip');
     archiveObj.pipe(output);

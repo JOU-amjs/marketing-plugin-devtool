@@ -1,12 +1,12 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 14:01:33
+ * @LastEditTime: 2020-08-02 17:58:49
  */
 'use strict'
-const webpack = require('webpack');
 const { paths, moduleUrls } = require('../../config');
 const { getEnvConfiguration } = require('./env');
+const { createWebpackEnvPlugin, buildWebpackAlias, getDevtool } = require('../common-webpack-config');
 const envConfig = getEnvConfiguration();
 
 
@@ -19,25 +19,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
-    alias: {
-      '@': paths.offlineDirectory(),
-    }
+    alias: buildWebpackAlias(paths.offlineDirectory()),
   },
-  module: {
-    rules: [
-      // {
-      //   test: /\.js$/,
-      //   use: {
-      //     loader: 'babel-loader',
-      //     options: {
-      //       presets: ['@babel/preset-env'],
-      //     },
-      //   },
-      //   include: [paths.offlineDirectory()]
-      // },
-    ]
-  },
-  devtool: 'inline-source-map',
+  devtool: getDevtool(process.env.NODE_ENV),
   devServer: {
     clientLogLevel: 'warning',
     compress: true,
@@ -50,11 +34,6 @@ module.exports = {
     contentBase: moduleUrls.shopfrontOrder.publicPath,
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env': JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV,
-        ...envConfig.envs,
-      })
-    }),
+    createWebpackEnvPlugin(envConfig.envs),
   ],
 }

@@ -1,15 +1,24 @@
 const chalk = require("chalk");
+const { assertPluginName } = require("../../common-assert");
 
 /*
  * @Date: 2020-07-16 10:32:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 22:40:09
+ * @LastEditTime: 2020-07-21 10:27:55
  */ 
 module.exports = [
   {
     type: 'input',
     message: '输入营销插件名' + chalk.dim('(中文、英文或数字)'),
     name: 'name',
+    validate(name) {
+      try {
+        assertPluginName(name);
+        return true;
+      } catch (error) {
+        return error.message;
+      }
+    }
   },
   {
     type: 'input',
@@ -45,13 +54,9 @@ module.exports = [
     }
   },
   {
-    type: 'input',
-    message: '指定插件所用到的数据表\n' + chalk.dim('多个表名用逗号隔开，如不确定后续可在plugin.json中添加)\n'),
-    name: 'collection',
-    filter(input) {
-      return (input || '').split(/,|，/)
-        .map(item => `"${item.trim()}"`)
-        .filter(item => item);
-    }
-  },
+    type: 'confirm',
+    message: '插件是否需要使用商家填写自定义参数' + chalk.dim('(默认Yes)'),
+    name: 'hasConfigView',
+    default: true,
+  }
 ];

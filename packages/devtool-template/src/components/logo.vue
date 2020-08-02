@@ -1,11 +1,11 @@
 <!--
  * @Date: 2020-07-10 10:27:11
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-10 10:38:12
+ * @LastEditTime: 2020-08-02 13:49:01
 --> 
 <template>
   <div class="container flex-row align-center">
-    <img class="logo" :src="require('@/assets/logo.png')" />
+    <img class="logo" src="@/assets/logo.png" />
     <span class="title-3">有吃生活营销插件开发工具</span>
   </div>
 </template>

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-14 15:18:14
+ * @LastEditTime: 2020-07-20 18:14:50
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
@@ -74,7 +74,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
   }
   
   // 将小程序的初始化参数传递给小程序
-  // 相同插件的初始化数据一定是相同的，所以这边使用mpCode作为key
+  // 相同插件的初始化数据一定是相同的，所以这边使用pluginId作为key
   let mpInitData = {
     shareMessage,
   };
@@ -88,7 +88,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
   }
   else {
     javaRequest.post('/user/interact/save', {
-      key: globalData.get<string>('mpCode'),
+      key: globalData.get<string>('pluginId'),
       value: mpInitData,
     });
   }

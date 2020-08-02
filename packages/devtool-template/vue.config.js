@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-07 19:37:47
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:39:05
+ * @LastEditTime: 2020-07-20 14:44:22
  */ 
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -27,13 +27,24 @@ module.exports = {
   devServer: {
     before(app) {
       app.use(bodyParser.json());
-      app.get('/get_online_pages', (_, response) => {
+      app.get('/get_devtool_config', (_, response) => {
         response.json({
           code: 200,
-          data: [
-            { path: 'index' },
-            { path: 'rank' }
-          ],
+          data: {
+            pluginID: 'mock-plugin-ID',
+            onlinePages: [
+              { path: 'index' },
+              { path: 'rank' }
+            ],
+            database: {
+              development: {
+                collection: ['user', 'order']
+              },
+              production: {
+                collection: ['user', 'rank']
+              }
+            },
+          },
         });
       });
 

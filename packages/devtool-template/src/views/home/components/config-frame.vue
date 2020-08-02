@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-06 21:28:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:31:22
+ * @LastEditTime: 2020-07-20 15:44:05
 --> 
 <template>
   <div class="container">
@@ -15,10 +15,9 @@
 <script lang="ts">
 import WindowMessage from '@/common/window-message';
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import request from '@/common/network/request';
+import { localhostRequest } from '@/common/network/request';
 import { Mutation } from 'vuex-class';
 import { TMutationFn } from '@/store';
-// import qs from 'qs';
 import { config } from '@vue/test-utils';
 
 @Component
@@ -30,12 +29,8 @@ export default class ConfigFrame extends Vue {
     this.message?.emit('_emitSubmit');
   }
   private async postData(configData: any) {
-    let { data } = await request({
-      url: '/mock/save_config_data',
-      method: 'post',
-      data: {
-        configData,
-      },
+    let { data } = await localhostRequest.post('/mock/save_config_data', {
+      configData,
     });
     if (data.code === 200) {
       this.updateState({ configData });

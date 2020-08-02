@@ -1,5 +1,5 @@
 /*!
-  * view-program-lib 0.2.5 (https://github.com/JOU amjs/view-program-lib)
+  * view-program-lib 0.2.8 (https://github.com/JOU amjs/view-program-lib)
   * API https://github.com/JOU amjs/view-program-lib/blob/master/doc/api.md
   * Copyright 2017-2020 JOU amjs. All Rights Reserved
   * Licensed under MIT (https://github.com/JOU amjs/view-program-lib/blob/master/LICENSE)
@@ -8504,7 +8504,7 @@
     }
 
     /*!
-      * vue-router v3.1.6
+      * vue-router v3.3.4
       * (c) 2020 Evan You
       * @license MIT
       */
@@ -8526,12 +8526,8 @@
       return Object.prototype.toString.call(err).indexOf('Error') > -1
     }
 
-    function isExtendedError (constructor, err) {
-      return (
-        err instanceof constructor ||
-        // _name is to support IE9 too
-        (err && (err.name === constructor.name || err._name === constructor._name))
-      )
+    function isRouterError (err, errorType) {
+      return isError(err) && err._isRouter && (errorType == null || err.type === errorType)
     }
 
     function extend$1 (a, b) {
@@ -9109,7 +9105,7 @@
      * @return {!function(Object=, Object=)}
      */
     function compile (str, options) {
-      return tokensToFunction(parse(str, options))
+      return tokensToFunction(parse(str, options), options)
     }
 
     /**
@@ -9139,14 +9135,14 @@
     /**
      * Expose a method for transforming tokens into the path function.
      */
-    function tokensToFunction (tokens) {
+    function tokensToFunction (tokens, options) {
       // Compile all the tokens into regexps.
       var matches = new Array(tokens.length);
 
       // Compile all the patterns before compilation.
       for (var i = 0; i < tokens.length; i++) {
         if (typeof tokens[i] === 'object') {
-          matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$');
+          matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$', flags(options));
         }
       }
 
@@ -9259,7 +9255,7 @@
      * @return {string}
      */
     function flags (options) {
-      return options.sensitive ? '' : 'i'
+      return options && options.sensitive ? '' : 'i'
     }
 
     /**
@@ -9550,6 +9546,10 @@
         replace: Boolean,
         activeClass: String,
         exactActiveClass: String,
+        ariaCurrentValue: {
+          type: String,
+          default: 'page'
+        },
         event: {
           type: eventTypes,
           default: 'click'
@@ -9594,6 +9594,8 @@
         classes[activeClass] = this.exact
           ? classes[exactActiveClass]
           : isIncludedRoute(current, compareTarget);
+
+        var ariaCurrentValue = classes[exactActiveClass] ? this.ariaCurrentValue : null;
 
         var handler = function (e) {
           if (guardEvent(e)) {
@@ -9643,7 +9645,7 @@
 
         if (this.tag === 'a') {
           data.on = on;
-          data.attrs = { href: href };
+          data.attrs = { href: href, 'aria-current': ariaCurrentValue };
         } else {
           // find the first <a> child and apply listener and href
           var a = findAnchor(this.$slots.default);
@@ -9671,6 +9673,7 @@
 
             var aAttrs = (a.data.attrs = extend$1({}, a.data.attrs));
             aAttrs.href = href;
+            aAttrs['aria-current'] = ariaCurrentValue;
           } else {
             // doesn't have <a> child, apply listener to self
             data.on = on;
@@ -10189,6 +10192,10 @@
     var positionStore = Object.create(null);
 
     function setupScroll () {
+      // Prevent browser scroll behavior on History popstate
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
       // Fix for #1585 for Firefox
       // Fix for #2195 Add optional third attribute to workaround a bug in safari https://bugs.webkit.org/show_bug.cgi?id=182678
       // Fix for #2774 Support for apps loaded from Windows file shares not mapped to network drives: replaced location.origin with
@@ -10200,12 +10207,10 @@
       var stateCopy = extend$1({}, window.history.state);
       stateCopy.key = getStateKey();
       window.history.replaceState(stateCopy, '', absolutePath);
-      window.addEventListener('popstate', function (e) {
-        saveScrollPosition();
-        if (e.state && e.state.key) {
-          setStateKey(e.state.key);
-        }
-      });
+      window.addEventListener('popstate', handlePopState);
+      return function () {
+        window.removeEventListener('popstate', handlePopState);
+      }
     }
 
     function handleScroll (
@@ -10264,6 +10269,13 @@
           x: window.pageXOffset,
           y: window.pageYOffset
         };
+      }
+    }
+
+    function handlePopState (e) {
+      saveScrollPosition();
+      if (e.state && e.state.key) {
+        setStateKey(e.state.key);
       }
     }
 
@@ -10352,7 +10364,7 @@
           return false
         }
 
-        return window.history && 'pushState' in window.history
+        return window.history && typeof window.history.pushState === 'function'
       })();
 
     function pushState (url, replace) {
@@ -10506,32 +10518,72 @@
       }
     }
 
-    var NavigationDuplicated = /*@__PURE__*/(function (Error) {
-      function NavigationDuplicated (normalizedLocation) {
-        Error.call(this);
-        this.name = this._name = 'NavigationDuplicated';
-        // passing the message to super() doesn't seem to work in the transpiled version
-        this.message = "Navigating to current location (\"" + (normalizedLocation.fullPath) + "\") is not allowed";
-        // add a stack property so services like Sentry can correctly display it
-        Object.defineProperty(this, 'stack', {
-          value: new Error().stack,
-          writable: true,
-          configurable: true
-        });
-        // we could also have used
-        // Error.captureStackTrace(this, this.constructor)
-        // but it only exists on node and chrome
-      }
+    var NavigationFailureType = {
+      redirected: 1,
+      aborted: 2,
+      cancelled: 3,
+      duplicated: 4
+    };
 
-      if ( Error ) NavigationDuplicated.__proto__ = Error;
-      NavigationDuplicated.prototype = Object.create( Error && Error.prototype );
-      NavigationDuplicated.prototype.constructor = NavigationDuplicated;
+    function createNavigationRedirectedError (from, to) {
+      return createRouterError(
+        from,
+        to,
+        NavigationFailureType.redirected,
+        ("Redirected when going from \"" + (from.fullPath) + "\" to \"" + (stringifyRoute(
+          to
+        )) + "\" via a navigation guard.")
+      )
+    }
 
-      return NavigationDuplicated;
-    }(Error));
+    function createNavigationDuplicatedError (from, to) {
+      return createRouterError(
+        from,
+        to,
+        NavigationFailureType.duplicated,
+        ("Avoided redundant navigation to current location: \"" + (from.fullPath) + "\".")
+      )
+    }
 
-    // support IE9
-    NavigationDuplicated._name = 'NavigationDuplicated';
+    function createNavigationCancelledError (from, to) {
+      return createRouterError(
+        from,
+        to,
+        NavigationFailureType.cancelled,
+        ("Navigation cancelled from \"" + (from.fullPath) + "\" to \"" + (to.fullPath) + "\" with a new navigation.")
+      )
+    }
+
+    function createNavigationAbortedError (from, to) {
+      return createRouterError(
+        from,
+        to,
+        NavigationFailureType.aborted,
+        ("Navigation aborted from \"" + (from.fullPath) + "\" to \"" + (to.fullPath) + "\" via a navigation guard.")
+      )
+    }
+
+    function createRouterError (from, to, type, message) {
+      var error = new Error(message);
+      error._isRouter = true;
+      error.from = from;
+      error.to = to;
+      error.type = type;
+
+      return error
+    }
+
+    var propertiesToLog = ['params', 'query', 'hash'];
+
+    function stringifyRoute (to) {
+      if (typeof to === 'string') { return to }
+      if ('path' in to) { return to.path }
+      var location = {};
+      propertiesToLog.forEach(function (key) {
+        if (key in to) { location[key] = to[key]; }
+      });
+      return JSON.stringify(location, null, 2)
+    }
 
     /*  */
 
@@ -10545,6 +10597,7 @@
       this.readyCbs = [];
       this.readyErrorCbs = [];
       this.errorCbs = [];
+      this.listeners = [];
     };
 
     History.prototype.listen = function listen (cb) {
@@ -10577,9 +10630,13 @@
       this.confirmTransition(
         route,
         function () {
+          var prev = this$1.current;
           this$1.updateRoute(route);
           onComplete && onComplete(route);
           this$1.ensureURL();
+          this$1.router.afterHooks.forEach(function (hook) {
+            hook && hook(route, prev);
+          });
 
           // fire ready cbs once
           if (!this$1.ready) {
@@ -10595,9 +10652,17 @@
           }
           if (err && !this$1.ready) {
             this$1.ready = true;
-            this$1.readyErrorCbs.forEach(function (cb) {
-              cb(err);
-            });
+            // Initial redirection should still trigger the onReady onSuccess
+            // https://github.com/vuejs/vue-router/issues/3225
+            if (!isRouterError(err, NavigationFailureType.redirected)) {
+              this$1.readyErrorCbs.forEach(function (cb) {
+                cb(err);
+              });
+            } else {
+              this$1.readyCbs.forEach(function (cb) {
+                cb(route);
+              });
+            }
           }
         }
       );
@@ -10608,11 +10673,10 @@
 
       var current = this.current;
       var abort = function (err) {
-        // after merging https://github.com/vuejs/vue-router/pull/2771 we
-        // When the user navigates through history through back/forward buttons
-        // we do not want to throw the error. We only throw it if directly calling
-        // push/replace. That's why it's not included in isError
-        if (!isExtendedError(NavigationDuplicated, err) && isError(err)) {
+        // changed after adding errors with
+        // https://github.com/vuejs/vue-router/pull/3047 before that change,
+        // redirect and aborted navigation would produce an err == null
+        if (!isRouterError(err) && isError(err)) {
           if (this$1.errorCbs.length) {
             this$1.errorCbs.forEach(function (cb) {
               cb(err);
@@ -10624,13 +10688,16 @@
         }
         onAbort && onAbort(err);
       };
+      var lastRouteIndex = route.matched.length - 1;
+      var lastCurrentIndex = current.matched.length - 1;
       if (
         isSameRoute(route, current) &&
         // in the case the route map has been dynamically appended to
-        route.matched.length === current.matched.length
+        lastRouteIndex === lastCurrentIndex &&
+        route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]
       ) {
         this.ensureURL();
-        return abort(new NavigationDuplicated(route))
+        return abort(createNavigationDuplicatedError(current, route))
       }
 
       var ref = resolveQueue(
@@ -10657,12 +10724,15 @@
       this.pending = route;
       var iterator = function (hook, next) {
         if (this$1.pending !== route) {
-          return abort()
+          return abort(createNavigationCancelledError(current, route))
         }
         try {
           hook(route, current, function (to) {
-            if (to === false || isError(to)) {
+            if (to === false) {
               // next(false) -> abort navigation, ensure current URL
+              this$1.ensureURL(true);
+              abort(createNavigationAbortedError(current, route));
+            } else if (isError(to)) {
               this$1.ensureURL(true);
               abort(to);
             } else if (
@@ -10671,7 +10741,7 @@
                 (typeof to.path === 'string' || typeof to.name === 'string'))
             ) {
               // next('/') or next({ path: '/' }) -> redirect
-              abort();
+              abort(createNavigationRedirectedError(current, route));
               if (typeof to === 'object' && to.replace) {
                 this$1.replace(to);
               } else {
@@ -10696,7 +10766,7 @@
         var queue = enterGuards.concat(this$1.router.resolveHooks);
         runQueue(queue, iterator, function () {
           if (this$1.pending !== route) {
-            return abort()
+            return abort(createNavigationCancelledError(current, route))
           }
           this$1.pending = null;
           onComplete(route);
@@ -10712,12 +10782,19 @@
     };
 
     History.prototype.updateRoute = function updateRoute (route) {
-      var prev = this.current;
       this.current = route;
       this.cb && this.cb(route);
-      this.router.afterHooks.forEach(function (hook) {
-        hook && hook(route, prev);
+    };
+
+    History.prototype.setupListeners = function setupListeners () {
+      // Default implementation is empty
+    };
+
+    History.prototype.teardownListeners = function teardownListeners () {
+      this.listeners.forEach(function (cleanupListener) {
+        cleanupListener();
       });
+      this.listeners = [];
     };
 
     function normalizeBase (base) {
@@ -10862,25 +10939,37 @@
 
     var HTML5History = /*@__PURE__*/(function (History) {
       function HTML5History (router, base) {
-        var this$1 = this;
-
         History.call(this, router, base);
 
+        this._startLocation = getLocation(this.base);
+      }
+
+      if ( History ) HTML5History.__proto__ = History;
+      HTML5History.prototype = Object.create( History && History.prototype );
+      HTML5History.prototype.constructor = HTML5History;
+
+      HTML5History.prototype.setupListeners = function setupListeners () {
+        var this$1 = this;
+
+        if (this.listeners.length > 0) {
+          return
+        }
+
+        var router = this.router;
         var expectScroll = router.options.scrollBehavior;
         var supportsScroll = supportsPushState && expectScroll;
 
         if (supportsScroll) {
-          setupScroll();
+          this.listeners.push(setupScroll());
         }
 
-        var initLocation = getLocation(this.base);
-        window.addEventListener('popstate', function (e) {
+        var handleRoutingEvent = function () {
           var current = this$1.current;
 
           // Avoiding first `popstate` event dispatched in some browsers but first
           // history route not updated since async guard at the same time.
           var location = getLocation(this$1.base);
-          if (this$1.current === START && location === initLocation) {
+          if (this$1.current === START && location === this$1._startLocation) {
             return
           }
 
@@ -10889,12 +10978,12 @@
               handleScroll(router, route, current, true);
             }
           });
+        };
+        window.addEventListener('popstate', handleRoutingEvent);
+        this.listeners.push(function () {
+          window.removeEventListener('popstate', handleRoutingEvent);
         });
-      }
-
-      if ( History ) HTML5History.__proto__ = History;
-      HTML5History.prototype = Object.create( History && History.prototype );
-      HTML5History.prototype.constructor = HTML5History;
+      };
 
       HTML5History.prototype.go = function go (n) {
         window.history.go(n);
@@ -10940,7 +11029,7 @@
 
     function getLocation (base) {
       var path = decodeURI(window.location.pathname);
-      if (base && path.indexOf(base) === 0) {
+      if (base && path.toLowerCase().indexOf(base.toLowerCase()) === 0) {
         path = path.slice(base.length);
       }
       return (path || '/') + window.location.search + window.location.hash
@@ -10967,31 +11056,40 @@
       HashHistory.prototype.setupListeners = function setupListeners () {
         var this$1 = this;
 
+        if (this.listeners.length > 0) {
+          return
+        }
+
         var router = this.router;
         var expectScroll = router.options.scrollBehavior;
         var supportsScroll = supportsPushState && expectScroll;
 
         if (supportsScroll) {
-          setupScroll();
+          this.listeners.push(setupScroll());
         }
 
-        window.addEventListener(
-          supportsPushState ? 'popstate' : 'hashchange',
-          function () {
-            var current = this$1.current;
-            if (!ensureSlash()) {
-              return
-            }
-            this$1.transitionTo(getHash(), function (route) {
-              if (supportsScroll) {
-                handleScroll(this$1.router, route, current, true);
-              }
-              if (!supportsPushState) {
-                replaceHash(route.fullPath);
-              }
-            });
+        var handleRoutingEvent = function () {
+          var current = this$1.current;
+          if (!ensureSlash()) {
+            return
           }
+          this$1.transitionTo(getHash(), function (route) {
+            if (supportsScroll) {
+              handleScroll(this$1.router, route, current, true);
+            }
+            if (!supportsPushState) {
+              replaceHash(route.fullPath);
+            }
+          });
+        };
+        var eventType = supportsPushState ? 'popstate' : 'hashchange';
+        window.addEventListener(
+          eventType,
+          handleRoutingEvent
         );
+        this.listeners.push(function () {
+          window.removeEventListener(eventType, handleRoutingEvent);
+        });
       };
 
       HashHistory.prototype.push = function push (location, onComplete, onAbort) {
@@ -11164,7 +11262,7 @@
             this$1.updateRoute(route);
           },
           function (err) {
-            if (isExtendedError(NavigationDuplicated, err)) {
+            if (isRouterError(err, NavigationFailureType.duplicated)) {
               this$1.index = targetIndex;
             }
           }
@@ -11259,6 +11357,12 @@
         // ensure we still have a main app or null if no apps
         // we do not release the router so it can be reused
         if (this$1.app === app) { this$1.app = this$1.apps[0] || null; }
+
+        if (!this$1.app) {
+          // clean up event listeners
+          // https://github.com/vuejs/vue-router/issues/2341
+          this$1.history.teardownListeners();
+        }
       });
 
       // main app previously initialized
@@ -11271,17 +11375,11 @@
 
       var history = this.history;
 
-      if (history instanceof HTML5History) {
-        history.transitionTo(history.getCurrentLocation());
-      } else if (history instanceof HashHistory) {
-        var setupHashListener = function () {
+      if (history instanceof HTML5History || history instanceof HashHistory) {
+        var setupListeners = function () {
           history.setupListeners();
         };
-        history.transitionTo(
-          history.getCurrentLocation(),
-          setupHashListener,
-          setupHashListener
-        );
+        history.transitionTo(history.getCurrentLocation(), setupListeners, setupListeners);
       }
 
       history.listen(function (route) {
@@ -11414,14 +11512,14 @@
     }
 
     VueRouter.install = install;
-    VueRouter.version = '3.1.6';
+    VueRouter.version = '3.3.4';
 
     if (inBrowser$1 && window.Vue) {
       window.Vue.use(VueRouter);
     }
 
-    /**
-     * vuex v3.1.3
+    /*!
+     * vuex v3.5.1
      * (c) 2020 Evan You
      * @license MIT
      */
@@ -11481,7 +11579,11 @@
 
       store.subscribe(function (mutation, state) {
         devtoolHook.emit('vuex:mutation', mutation, state);
-      });
+      }, { prepend: true });
+
+      store.subscribeAction(function (action, state) {
+        devtoolHook.emit('vuex:action', action, state);
+      }, { prepend: true });
     }
 
     /**
@@ -11492,6 +11594,47 @@
      * @param {Function} f
      * @return {*}
      */
+    function find (list, f) {
+      return list.filter(f)[0]
+    }
+
+    /**
+     * Deep copy the given object considering circular structure.
+     * This function caches all nested objects and its copies.
+     * If it detects circular structure, use cached copy to avoid infinite loop.
+     *
+     * @param {*} obj
+     * @param {Array<Object>} cache
+     * @return {*}
+     */
+    function deepCopy (obj, cache) {
+      if ( cache === void 0 ) cache = [];
+
+      // just return if obj is immutable value
+      if (obj === null || typeof obj !== 'object') {
+        return obj
+      }
+
+      // if obj is hit, it is in circular structure
+      var hit = find(cache, function (c) { return c.original === obj; });
+      if (hit) {
+        return hit.copy
+      }
+
+      var copy = Array.isArray(obj) ? [] : {};
+      // put the copy into cache at first
+      // because we want to refer it in recursive deepCopy
+      cache.push({
+        original: obj,
+        copy: copy
+      });
+
+      Object.keys(obj).forEach(function (key) {
+        copy[key] = deepCopy(obj[key], cache);
+      });
+
+      return copy
+    }
 
     /**
      * forEach for object
@@ -11547,6 +11690,10 @@
 
     Module.prototype.getChild = function getChild (key) {
       return this._children[key]
+    };
+
+    Module.prototype.hasChild = function hasChild (key) {
+      return key in this._children
     };
 
     Module.prototype.update = function update (rawModule) {
@@ -11636,9 +11783,30 @@
     ModuleCollection.prototype.unregister = function unregister (path) {
       var parent = this.get(path.slice(0, -1));
       var key = path[path.length - 1];
-      if (!parent.getChild(key).runtime) { return }
+      var child = parent.getChild(key);
+
+      if (!child) {
+        {
+          console.warn(
+            "[vuex] trying to unregister module '" + key + "', which is " +
+            "not registered"
+          );
+        }
+        return
+      }
+
+      if (!child.runtime) {
+        return
+      }
 
       parent.removeChild(key);
+    };
+
+    ModuleCollection.prototype.isRegistered = function isRegistered (path) {
+      var parent = this.get(path.slice(0, -1));
+      var key = path[path.length - 1];
+
+      return parent.hasChild(key)
     };
 
     function update (path, targetModule, newModule) {
@@ -11863,28 +12031,42 @@
         ? Promise.all(entry.map(function (handler) { return handler(payload); }))
         : entry[0](payload);
 
-      return result.then(function (res) {
-        try {
-          this$1._actionSubscribers
-            .filter(function (sub) { return sub.after; })
-            .forEach(function (sub) { return sub.after(action, this$1.state); });
-        } catch (e) {
-          {
-            console.warn("[vuex] error in after action subscribers: ");
-            console.error(e);
+      return new Promise(function (resolve, reject) {
+        result.then(function (res) {
+          try {
+            this$1._actionSubscribers
+              .filter(function (sub) { return sub.after; })
+              .forEach(function (sub) { return sub.after(action, this$1.state); });
+          } catch (e) {
+            {
+              console.warn("[vuex] error in after action subscribers: ");
+              console.error(e);
+            }
           }
-        }
-        return res
+          resolve(res);
+        }, function (error) {
+          try {
+            this$1._actionSubscribers
+              .filter(function (sub) { return sub.error; })
+              .forEach(function (sub) { return sub.error(action, this$1.state, error); });
+          } catch (e) {
+            {
+              console.warn("[vuex] error in error action subscribers: ");
+              console.error(e);
+            }
+          }
+          reject(error);
+        });
       })
     };
 
-    Store.prototype.subscribe = function subscribe (fn) {
-      return genericSubscribe(fn, this._subscribers)
+    Store.prototype.subscribe = function subscribe (fn, options) {
+      return genericSubscribe(fn, this._subscribers, options)
     };
 
-    Store.prototype.subscribeAction = function subscribeAction (fn) {
+    Store.prototype.subscribeAction = function subscribeAction (fn, options) {
       var subs = typeof fn === 'function' ? { before: fn } : fn;
-      return genericSubscribe(subs, this._actionSubscribers)
+      return genericSubscribe(subs, this._actionSubscribers, options)
     };
 
     Store.prototype.watch = function watch (getter, cb, options) {
@@ -11937,6 +12119,16 @@
       resetStore(this);
     };
 
+    Store.prototype.hasModule = function hasModule (path) {
+      if (typeof path === 'string') { path = [path]; }
+
+      {
+        assert$1(Array.isArray(path), "module path must be a string or an Array.");
+      }
+
+      return this._modules.isRegistered(path)
+    };
+
     Store.prototype.hotUpdate = function hotUpdate (newOptions) {
       this._modules.update(newOptions);
       resetStore(this, true);
@@ -11951,9 +12143,11 @@
 
     Object.defineProperties( Store.prototype, prototypeAccessors$1$1 );
 
-    function genericSubscribe (fn, subs) {
+    function genericSubscribe (fn, subs, options) {
       if (subs.indexOf(fn) < 0) {
-        subs.push(fn);
+        options && options.prepend
+          ? subs.unshift(fn)
+          : subs.push(fn);
       }
       return function () {
         var i = subs.indexOf(fn);
@@ -12031,7 +12225,7 @@
 
       // register in namespace map
       if (module.namespaced) {
-        if (store._modulesNamespaceMap[namespace] && "development" !== 'production') {
+        if (store._modulesNamespaceMap[namespace] && ("development" !== 'production')) {
           console.error(("[vuex] duplicate namespace " + namespace + " for the namespaced module " + (path.join('/'))));
         }
         store._modulesNamespaceMap[namespace] = module;
@@ -12458,15 +12652,107 @@
       return module
     }
 
-    var index_esm = {
+    // Credits: borrowed code from fcomb/redux-logger
+
+    function createLogger (ref) {
+      if ( ref === void 0 ) ref = {};
+      var collapsed = ref.collapsed; if ( collapsed === void 0 ) collapsed = true;
+      var filter = ref.filter; if ( filter === void 0 ) filter = function (mutation, stateBefore, stateAfter) { return true; };
+      var transformer = ref.transformer; if ( transformer === void 0 ) transformer = function (state) { return state; };
+      var mutationTransformer = ref.mutationTransformer; if ( mutationTransformer === void 0 ) mutationTransformer = function (mut) { return mut; };
+      var actionFilter = ref.actionFilter; if ( actionFilter === void 0 ) actionFilter = function (action, state) { return true; };
+      var actionTransformer = ref.actionTransformer; if ( actionTransformer === void 0 ) actionTransformer = function (act) { return act; };
+      var logMutations = ref.logMutations; if ( logMutations === void 0 ) logMutations = true;
+      var logActions = ref.logActions; if ( logActions === void 0 ) logActions = true;
+      var logger = ref.logger; if ( logger === void 0 ) logger = console;
+
+      return function (store) {
+        var prevState = deepCopy(store.state);
+
+        if (typeof logger === 'undefined') {
+          return
+        }
+
+        if (logMutations) {
+          store.subscribe(function (mutation, state) {
+            var nextState = deepCopy(state);
+
+            if (filter(mutation, prevState, nextState)) {
+              var formattedTime = getFormattedTime();
+              var formattedMutation = mutationTransformer(mutation);
+              var message = "mutation " + (mutation.type) + formattedTime;
+
+              startMessage(logger, message, collapsed);
+              logger.log('%c prev state', 'color: #9E9E9E; font-weight: bold', transformer(prevState));
+              logger.log('%c mutation', 'color: #03A9F4; font-weight: bold', formattedMutation);
+              logger.log('%c next state', 'color: #4CAF50; font-weight: bold', transformer(nextState));
+              endMessage(logger);
+            }
+
+            prevState = nextState;
+          });
+        }
+
+        if (logActions) {
+          store.subscribeAction(function (action, state) {
+            if (actionFilter(action, state)) {
+              var formattedTime = getFormattedTime();
+              var formattedAction = actionTransformer(action);
+              var message = "action " + (action.type) + formattedTime;
+
+              startMessage(logger, message, collapsed);
+              logger.log('%c action', 'color: #03A9F4; font-weight: bold', formattedAction);
+              endMessage(logger);
+            }
+          });
+        }
+      }
+    }
+
+    function startMessage (logger, message, collapsed) {
+      var startMessage = collapsed
+        ? logger.groupCollapsed
+        : logger.group;
+
+      // render
+      try {
+        startMessage.call(logger, message);
+      } catch (e) {
+        logger.log(message);
+      }
+    }
+
+    function endMessage (logger) {
+      try {
+        logger.groupEnd();
+      } catch (e) {
+        logger.log('—— log end ——');
+      }
+    }
+
+    function getFormattedTime () {
+      var time = new Date();
+      return (" @ " + (pad(time.getHours(), 2)) + ":" + (pad(time.getMinutes(), 2)) + ":" + (pad(time.getSeconds(), 2)) + "." + (pad(time.getMilliseconds(), 3)))
+    }
+
+    function repeat$1 (str, times) {
+      return (new Array(times + 1)).join(str)
+    }
+
+    function pad (num, maxLength) {
+      return repeat$1('0', maxLength - num.toString().length) + num
+    }
+
+    var index$1 = {
       Store: Store,
       install: install$1,
-      version: '3.1.3',
+      version: '3.5.1',
       mapState: mapState,
       mapMutations: mapMutations,
       mapGetters: mapGetters,
       mapActions: mapActions,
-      createNamespacedHelpers: createNamespacedHelpers
+      createNamespacedHelpers: createNamespacedHelpers,
+      createLogger: createLogger
     };
 
     var bind$1 = function bind(fn, thisArg) {
@@ -14490,10 +14776,24 @@
         });
         return params;
     }
-    function parseMpCode(pathname) {
+    function parseKeyParams(pathname) {
         if (pathname === void 0) { pathname = ''; }
+        var keyParams = {
+            pluginId: '',
+            activityId: '',
+            shopId: '',
+        };
         pathname = pathname.substr(0, 1) === '/' ? pathname.substr(1) : pathname;
-        return pathname.split('/')[0];
+        var pathDataAry = pathname.split('/');
+        var onlineStrIndex = pathDataAry.indexOf('online');
+        if (onlineStrIndex <= -1) {
+            throw new Error("current url is not a online program's url");
+        }
+        pathDataAry = pathDataAry.slice(0, onlineStrIndex);
+        keyParams.pluginId = pathDataAry[0] || '';
+        keyParams.activityId = pathDataAry[1] || '';
+        keyParams.shopId = pathDataAry[2] || '';
+        return keyParams;
     }
     function getInteractKey(isEcho) {
         if (isEcho === void 0) { isEcho = true; }
@@ -14502,7 +14802,7 @@
     function buildWebAbsolutePath(_a) {
         var url = _a.url, _b = _a.params, params = _b === void 0 ? {} : _b, _c = _a.routePath, routePath = _c === void 0 ? '' : _c;
         url = url.substr(0, 1) === '/' ? url.substr(1) : url;
-        var relativePath = buildPath("/" + globalData.get('mpCode') + "/" + url + ".html/#/" + routePath, __assign({ activityId: globalData.get('activityId') || '', shopId: globalData.get('shopId') || '' }, params));
+        var relativePath = buildPath("/" + globalData.get('pluginId') + "/" + url + ".html/#/" + routePath, __assign({ activityId: globalData.get('activityId') || '', shopId: globalData.get('shopId') || '' }, params));
         return WEBVIEW_BASE_URL + relativePath;
     }
 
@@ -14532,7 +14832,9 @@
                     return response;
                 }
                 else {
-                    console.log('数据返回了非200状态 ==> ', response.data);
+                    {
+                        console.log('数据返回了非200状态 ==> ', response.data);
+                    }
                     return Promise.reject(new Error(response.data.msg));
                 }
             }
@@ -14641,7 +14943,7 @@
         if (options === void 0) { options = {}; }
         if (globalConfig === void 0) { globalConfig = { title: '' }; }
         if (Object.keys(options).length <= 0) {
-            return { Vue: Vue, VueRouter: VueRouter, Vuex: index_esm };
+            return { Vue: Vue, VueRouter: VueRouter, Vuex: index$1 };
         }
         var router = undefined, routers = globalConfig.routers, stores = globalConfig.stores, plugins = globalConfig.plugins, shareMessage = globalConfig.shareMessage, title = globalConfig.title;
         if (typeof routers === 'object' && Array.isArray(routers.routes) && routers.routes.length > 0) {
@@ -14655,8 +14957,8 @@
         }
         var store = undefined;
         if (typeof stores === 'object' && Object.keys(stores).length > 0) {
-            Vue.use(index_esm);
-            store = new index_esm.Store(stores);
+            Vue.use(index$1);
+            store = new index$1.Store(stores);
         }
         if (Array.isArray(plugins) && plugins.length > 0) {
             plugins.forEach(function (_a) {
@@ -14677,7 +14979,7 @@
         }
         else {
             javaRequest.post('/user/interact/save', {
-                key: globalData.get('mpCode'),
+                key: globalData.get('pluginId'),
                 value: mpInitData,
             });
         }
@@ -14726,25 +15028,21 @@
     }
 
     var errorPrefix = 'assert';
-    var Assert = (function () {
-        function Assert() {
+    function assert$2(val, message) {
+        if (!val) {
+            throw new Error("[" + errorPrefix + "]" + (message || '参数断言失败'));
         }
-        Assert.notNull = function (val, message) {
-            if (val === null || val === undefined) {
-                throw new Error("[" + errorPrefix + "]" + (message || '参数不能为空'));
-            }
-        };
-        Assert.match = function (val, reg, message) {
-            if (!reg.test(val)) {
-                throw new Error("[" + errorPrefix + "]" + (message || '参数与指定正则表达式不匹配'));
-            }
-        };
-        Assert.equal = function (val, equalVal, message) {
-            if (val !== equalVal) {
-                throw new Error("[" + errorPrefix + "]" + (message || '参数与指定参数不相等'));
-            }
-        };
-        Assert.equalType = function (val, type, message) {
+    }
+    assert$2.notNull = function (val, message) {
+        assert$2(val !== null && val !== undefined, message || '参数不能为空');
+    };
+    assert$2.match = function (val, reg, message) {
+        assert$2(reg.test(val), message || '参数与指定正则表达式不匹配');
+    },
+        assert$2.equal = function (val, equalVal, message) {
+            assert$2(val === equalVal, message || '参数与指定参数不相等');
+        },
+        assert$2.equalType = function (val, type, message) {
             var typeAry = Array.isArray(type) ? type : [type];
             var equalPass = false;
             for (var i in typeAry) {
@@ -14753,12 +15051,8 @@
                     break;
                 }
             }
-            if (!equalPass) {
-                throw new Error("[" + errorPrefix + "]" + (message || '参数与指定类型不匹配'));
-            }
+            assert$2(equalPass, message || '参数与指定类型不匹配');
         };
-        return Assert;
-    }());
 
     function getEchoData (echoKey) {
         var _this = this;
@@ -14856,7 +15150,7 @@
             var path;
             return __generator(this, function (_a) {
                 path = pageCodes[pageCode];
-                Assert.notNull(path, "invalid pageCode`" + pageCode + "`");
+                assert$2.notNull(path, "invalid pageCode`" + pageCode + "`");
                 return [2, navigateTo(buildPath(path, params))];
             });
         });
@@ -14871,7 +15165,11 @@
                         userInfo = _a.sent();
                         if (!!userInfo) return [3, 3];
                         echoKey = getInteractKey();
-                        navigateTo(buildPath('pages/login/login', { tips: tips, echoKey: echoKey }));
+                        navigateTo(buildPath('pages/login/login', {
+                            tips: tips,
+                            echoKey: echoKey,
+                            save: 'true',
+                        }));
                         return [4, getEchoData(echoKey)];
                     case 2:
                         userInfo = _a.sent();
@@ -14884,7 +15182,7 @@
     function giveCoupon(userId, groupId) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                Assert.equal(!userId || !groupId, true, 'both params `userId` and `groupId` must be given');
+                assert$2(!userId || !groupId, 'both params `userId` and `groupId` must be given');
                 return [2, callServerFunction({
                         name: 'giveCoupon',
                         data: { customerId: userId, groupId: groupId },
@@ -14898,7 +15196,7 @@
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        Assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
+                        assert$2.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
                         globalCouponKey = 'couponInfo';
                         couponInfoMap = globalData.get(globalCouponKey) || {};
                         groupIds = Array.isArray(groupId) ? groupId : [groupId];
@@ -15068,9 +15366,60 @@
         return NamespacedStorage;
     }());
 
-    var commonWord = function (name) { return "forbidden call function `" + name + "`"; }, collectionForbiddenCalledFns = {
+    var converterErrors = {
+        argsLength: function (length) {
+            return "function insert expected 1 arg bug got " + length;
+        },
+    };
+    var argsConverters = {
+        insert: function (val) {
+            assert$2(val.length === 1, converterErrors.argsLength(val.length));
+            val[0] = Array.isArray(val[0]) ? val[0] : [val[0]];
+            return val;
+        },
+        limit: function (val) {
+            assert$2(val.length === 1, converterErrors.argsLength(val.length));
+            return val[0];
+        },
+        skip: function (val) {
+            assert$2(val.length === 1, converterErrors.argsLength(val.length));
+            return val[0];
+        }
+    };
+
+    var commonWord = function (name) { return "forbidden call function `" + name + "`"; };
+    var collectionForbiddenCalledFns = {
         drop: commonWord('drop') + ', instead you can delete collection by editing property `database` in plugin.js',
     };
+    var dbForbiddenCalledFns = {
+        dropDatabase: commonWord('dropDatabase'),
+        createDatabase: commonWord('createDatabase'),
+        createCollection: commonWord('createCollection') + ', collections will create automatically when uploading',
+    };
+
+    function responseConvert (mongoData) {
+        if (Array.isArray(mongoData)) {
+            mongoData = mongoData.map(function (dataItem) {
+                if (typeof dataItem === 'string') {
+                    dataItem = JSON.parse(dataItem, function (key, value) {
+                        if (key === '') {
+                            return value;
+                        }
+                        if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+Z$/.test(value)) {
+                            value = new Date(value);
+                        }
+                        else if (typeof value === 'object' && Object.keys(value).length === 1 && value.$oid) {
+                            value = value.$oid;
+                        }
+                        return value;
+                    });
+                }
+                return dataItem;
+            });
+        }
+        return mongoData;
+    }
+
     function createProxyedPromise(target, handler, executor) {
         var protoProxy = new Proxy(target, handler);
         Object.setPrototypeOf(Promise.prototype, protoProxy);
@@ -15089,7 +15438,8 @@
                     for (var _i = 0; _i < arguments.length; _i++) {
                         args[_i] = arguments[_i];
                     }
-                    target[key] = args;
+                    var convertFn = argsConverters[key] || (function (val) { return val; });
+                    target[key] = convertFn(args);
                     return collectionProxyedPromise;
                 };
             },
@@ -15101,19 +15451,23 @@
                         method: 'post',
                         data: {
                             activityId: activityId,
+                            pluginId: globalData.get('pluginId'),
+                            env: getMode() === 'plugin-dev' ? 1 : 2,
                             db: proxyObject,
                         },
-                    }).then(function (res) { return resolve(res); }, function (rej) { return reject(rej); });
+                    }).then(function (_a) {
+                        var data = _a.data;
+                        if (data.code !== 200) {
+                            reject(new Error(data.msg));
+                            return;
+                        }
+                        resolve(responseConvert(data.data));
+                    }, function (rej) { return reject(rej); });
                 }
             });
         });
         return collectionProxyedPromise;
     }
-    var dbForbiddenCalledFns = {
-        dropDatabase: commonWord('dropDatabase'),
-        createDatabase: commonWord('createDatabase'),
-        createCollection: commonWord('createCollection') + ', collections will create automatically when uploading',
-    };
     function createNamespacedDatabase(activityId) {
         return new Proxy({}, {
             get: function (_, key) {
@@ -15127,25 +15481,25 @@
     }
 
     var params = parseUrlParams(window.location.href);
-    params.mpCode = parseMpCode(window.location.pathname);
-    globalData.set(params);
+    var keyParams = parseKeyParams(window.location.pathname);
+    globalData.set(__assign(__assign({}, params), keyParams));
     var pluginMode = getMode();
-    if (!params.activityId || !params.shopId) {
+    if (!keyParams.activityId || !keyParams.shopId) {
         throw new Error("query `activityId` and `shopId` must be given");
     }
-    var activityId = params.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace), warnGetter = function (storageTag) { return function () { return console.warn("please use `EL." + storageTag + "` with the same usage."); }; };
+    var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace), warnGetter = function (storageTag) { return function () { return console.warn("please use `EL." + storageTag + "` with the same usage."); }; };
     if (pluginMode === 'prod') {
         Object.defineProperties(window, {
             localStorage: { get: warnGetter('localStorage') },
             sessionStorage: { get: warnGetter('sessionStorage') },
         });
     }
-    var index$1 = __assign(__assign({ Page: Page,
+    var index$2 = __assign(__assign({ Page: Page,
         MESSAGE_CODE: MESSAGE_CODE,
         localStorage: localStorage,
         sessionStorage: sessionStorage,
         database: database }, el), mp);
 
-    return index$1;
+    return index$2;
 
 })));

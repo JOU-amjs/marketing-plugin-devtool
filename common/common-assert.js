@@ -1,16 +1,15 @@
 /*
  * @Date: 2020-07-18 11:17:41
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 12:06:29
+ * @LastEditTime: 2020-07-20 17:22:06
  */
 const compareVersions = require('compare-versions');
 const assert = require('assert');
 
 module.exports = {
   assertPluginID(pluginID = '') {
-    const pluginIDErrorStr = 'pluginID必须以大写和小写字母、数字以及`-`和`_`组成，长度不多于20个字符';
-    assert.strict.match(pluginID, /^[\w-]+$/, pluginIDErrorStr);
-    assert.ok(pluginID.length <= 20, pluginIDErrorStr);
+    const pluginIDErrorStr = 'pluginID必须以大写和小写字母、数字以及`_`组成，长度为4-12个字符';
+    assert.strict.match(pluginID, /^[\w]{4,12}$/, pluginIDErrorStr);
   },
   assertPluginName(pluginName = '') {
     const pluginNameErrorStr = '插件名必须为中文、英文或数字组成，且不多于12字';

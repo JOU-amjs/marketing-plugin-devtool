@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 15:25:16
+ * @LastEditTime: 2020-07-23 11:41:54
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE, WEBVIEW_BASE_URL } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -147,14 +147,28 @@ export function parseUrlParams(url: string) {
 }
 
 /**
- * @description: 解析插件标识代码
+ * @description: 解析出pluginId、activityId、shopId等关键数据
  * @author: JOU(wx: huzhen555)
  * @param {string} 待解析的pathname(相对路径)
- * @return: 插件代码
+ * @return 包含pluginId、activityId、shopId的数据对象
  */
-export function parseMpCode(pathname: string = '') {
+export function parseKeyParams(pathname: string = '') {
+  const keyParams = {
+    pluginId: '',
+    activityId: '',
+    shopId: '',
+  }
   pathname = pathname.substr(0, 1) === '/' ? pathname.substr(1) : pathname;
-  return pathname.split('/')[0];
+  let pathDataAry = pathname.split('/');
+  let onlineStrIndex = pathDataAry.indexOf('online');
+  if (onlineStrIndex <= -1) {
+    throw new Error(`current url is not a online program's url`);
+  }
+  pathDataAry = pathDataAry.slice(0, onlineStrIndex);
+  keyParams.pluginId = pathDataAry[0] || '';
+  keyParams.activityId = pathDataAry[1] || '';
+  keyParams.shopId = pathDataAry[2] || '';
+  return keyParams;
 }
 
 /**
@@ -182,9 +196,9 @@ export type TNavOptions = {
 export function buildWebAbsolutePath({ url, params = {}, routePath = '' }: TNavOptions) {
   url = url.substr(0, 1) === '/' ? url.substr(1) : url;   // 如果路径以`/`开头，则去掉
   
-  // 相对路径格式为：[mpCode]/[url.html]/#/[routePath]?xx=xx&yy=yy
+  // 相对路径格式为：[pluginId]/[url.html]/#/[routePath]?xx=xx&yy=yy
   // 全路径示例：https://mp.online.ycsh6.com/7asd897gasd90f/pages/index.html/#/second?activityId=2211&shopId=113
-  let relativePath = buildPath(`/${globalData.get<string>('mpCode')}/${url}.html/#/${routePath}`, {
+  let relativePath = buildPath(`/${globalData.get<string>('pluginId')}/${url}.html/#/${routePath}`, {
     activityId: globalData.get<string>('activityId') || '',
     shopId: globalData.get<string>('shopId') || '',
     ...params,

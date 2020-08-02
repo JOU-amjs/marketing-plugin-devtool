@@ -98,7 +98,9 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -124,6 +126,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -153,7 +157,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
 <span class="cstat-no" title="statement not covered" > * @Date: 2020-04-09 11:06:01</span>
  * @LastEditor<span class="cstat-no" title="statement not covered" >s: JOU(wx: huzhen</span>555)
- * @LastEditT<span class="cstat-no" title="statement not covered" >ime: 2020-07-15 09:19:50</span>
+ * @LastEditT<span class="cstat-no" title="statement not covered" >ime: 2020-07-23 11:42:51</span>
  */<span class="cstat-no" title="statement not covered" ></span>
 import Pa<span class="cstat-no" title="statement not covered" >ge from './page';</span>
 import * as el from './api/el';<span class="cstat-no" title="statement not covered" ></span>
@@ -161,25 +165,27 @@ import * as mp from './api/m<span class="cstat-no" title="statement not covered"
 import NamespacedSto<span class="cstat-no" title="statement not covered" >rage, {LOCAL_STORAGE, SESSION_STORAGE } from './model/na</span>mespaced-storage-factory';
 import createName<span class="cstat-no" title="statement not covered" >spacedDatabase from './model/</span>namespaced-database';
 import global<span class="cstat-no" title="statement not covered" >Data from './model/global</span>-data';
-import { MESSAGE_<span class="cstat-no" title="statement not covered" >CODE } from './co</span>mmon/constant';
-import { pars<span class="cstat-no" title="statement not covered" >eUrlParams, parseMpCode, getMode } from './c</span>ommon/util';
+import { MESS<span class="cstat-no" title="statement not covered" >AGE_CODE } from './common/constant';</span>
+import { parseUr<span class="cstat-no" title="statement not covered" >lParams, getMode, parseKeyParams } from './commo</span>n/util';
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >const pluginMode = getMode();</span>
-<span class="cstat-no" title="statement not covered" ></span>
-/* 初<span class="cstat-no" title="statement not covered" >始化 */</span>
-// 解析get参数和插件标识并存储到全局对象中
-let params = pars<span class="cstat-no" title="statement not covered" >eUrlParams(window.</span>location.href<span class="cstat-no" title="statement not covered" >);<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="fstat-no" title="function not covered" ></span></span></span></span></span></span></span></span></span>
-<span class="cstat-no" title="statement not covered" >params.mpCode = parseMpCode(window.location.pathname);</span>
-glob<span class="cstat-no" title="statement not covered" >alData.set(params);</span>
+/* 初始化 */<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >// 解析get参数和插件标识并存储到全局对象中</span>
+let <span class="cstat-no" title="statement not covered" >params = parseUrlParams(window.location.href);</span>
+let keyParams = parseKeyParams(window.location.pathname);
+globalData.set({<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="fstat-no" title="function not covered" ></span></span></span></span></span></span></span></span></span></span>
+<span class="cstat-no" title="statement not covered" >  ...params,</span>
+  ..<span class="cstat-no" title="statement not covered" >.keyParams,</span>
+});
+const pluginMode = getMode();
 &nbsp;
 // 如果没有shopId和activityId则报错
-if (!params.activityId || !params.shopId) {
+<span class="cstat-no" title="statement not covered" >if (!keyParams.activityId || !keyParams.shopId) {</span>
   throw new Error(`query \`activityId\` and \`shopId\` must be given`);
-<span class="cstat-no" title="statement not covered" >}</span>
+}
 &nbsp;
 // 初始化各个命名空间下的重要存储对象
 let 
-  { activityId } = params,
+  { activityId } = keyParams,
   namespace = activityId || '',
   localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE),
   sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE),
@@ -208,7 +214,7 @@ export default {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Wed Jul 15 2020 15:30:33 GMT+0800 (GMT+08:00)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Thu Jul 23 2020 11:52:02 GMT+0800 (GMT+08:00)
 </div>
 </div>
 <script src="prettify.js"></script>

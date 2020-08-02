@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-05-28 10:45:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:42:57
+ * @LastEditTime: 2020-07-20 20:35:16
  */
 import { AxiosInstance } from 'axios';
 import { getEnvironment, createApiSign } from '../util';
@@ -52,7 +52,9 @@ export default function (request: AxiosInstance) {
         return response;
       }
       else {
-        console.log('数据返回了非200状态 ==> ', response.data);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('数据返回了非200状态 ==> ', response.data);
+        }
         return Promise.reject(new Error(response.data.msg));
       }
     }

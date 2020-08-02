@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-18 16:18:36
+ * @LastEditTime: 2020-08-02 13:45:51
  */ 
 const commander = require('commander');
 const ora = require('ora');
@@ -54,7 +54,7 @@ process.env.NODE_ENV = envs[commander.runtimeEnvironment];
   try {
     pluginType = getPluginType();
   } catch (error) {
-    spinner.fail('😣启动失败，该插件线上线下两部分的目录结构均缺失' + readTips);
+    spinner.fail(chalk.redBright('😣启动失败，该插件线上线下两部分的目录结构均缺失' + readTips));
     process.exit(1);
   }
   

@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-07 00:14:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 19:55:22
+ * @LastEditTime: 2020-08-02 14:24:07
 --> 
 <template>
   <div id="container">
@@ -33,14 +33,7 @@
         </div>
       </div>
     </div>
-    <div class="menu">
-      <logo />
-      <el-collapse v-model="activeNames">
-        <el-collapse-item title="配置数据" name="1">
-          <vue-json-pretty :data="configData" show-length :deep="2" highlightMouseoverNode />
-        </el-collapse-item>
-      </el-collapse>
-    </div>
+    <right-menu />
   </div>
 </template>
 
@@ -49,29 +42,33 @@ import { Vue, Component } from 'vue-property-decorator';
 import { State, Mutation } from 'vuex-class';
 import ConfigFrame from './components/config-frame.vue';
 import PluginViewOnline from './components/plugin-view-online.vue';
+import RightMenu from './components/right-menu.vue';
 import { IGeneralObject, IResponse } from '@/common/common.inter';
 import {
-  Collapse,
-  CollapseItem,
   Select,
   Option,
   Input,
   Button,
+  Tag,
 } from 'element-ui';
-import VueJsonPretty from 'vue-json-pretty';
-import Logo from '@/components/logo.vue';
-import request from '@/common/network/request';
-import { TConfigData, TMutationFn } from '@/store';
+import { localhostRequest } from '@/common/network/request';
+import { TMutationFn, TEnvDatabase } from '@/store';
 import { parseUrlParams } from '../../common/util';
-import qs from 'qs';
+import { accessToken } from '../../common/config';
 
 type TRouteInfo = {
   page: string,
   routePath: string,
   query: IGeneralObject<string|number>;
-}
-type TOnlinePage = {
-  path: string
+};
+type TOnlinePage = { path: string };
+type TDevtoolConfig = {
+  pluginID: string,
+  onlinePages: TOnlinePage[],
+  database: {
+    development: TEnvDatabase,
+    production: TEnvDatabase,
+  },
 };
 const query2String = (query: IGeneralObject<string|number>) => {
   return Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
@@ -80,18 +77,15 @@ const query2String = (query: IGeneralObject<string|number>) => {
   components: {
     ConfigFrame,
     PluginViewOnline,
-    [Collapse.name]: Collapse,
-    [CollapseItem.name]: CollapseItem,
+    RightMenu,
     [Select.name]: Select,
     [Option.name]: Option,
     [Input.name]: Input,
     [Button.name]: Button,
-    VueJsonPretty,
-    Logo,
+    [Tag.name]: Tag,
   }
 })
 export default class App extends Vue {
-  private activeNames = '1';
   private currentPage = '';
   private routePath = '';
   private routeInfo: TRouteInfo = {
@@ -100,7 +94,8 @@ export default class App extends Vue {
     query: {}
   };
   private onlinePages: TOnlinePage[] = [];
-  @State('configData') configData!: TConfigData;
+  @State('pageTitle') pageTitle!: string;
+  @State('pluginID') pluginID!: string;
   private navStatus = 'title';   // 导航栏状态，值为title时显示标题，值为location时显示页面url信息
   private containerUrl = `http://localhost:18002/?${query2String({ devMode: 1 })}`;
   get programUrl() {
@@ -108,30 +103,34 @@ export default class App extends Vue {
     page = page && page.substr(-1, 1) !== '/' ? `${page}/` : page;
     routePath = routePath.substr(0, 1) === '/' ? routePath : `/${routePath}`;
     query.devMode = 1;
-
+    query.accessToken = accessToken;
+    
     // 以下是在插件开发环境下添加的数值
-    query.activityId = 1;
-    query.shopId = 0;
-    query.accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudElkIjoxLCJpYXQiOjE1NzcyMzI3MDgsImV4cCI6MTYwODMzNjcwOH0.NByz-e7h5zrxRwH2ONFsvMIHtW3peFp2zG72YGN6vsg';
-    return `http://localhost:18003/online/${page}#${routePath}?${query2String(query)}`;
+    const activityId = 0;
+    const shopId = 0;
+    return `http://localhost:18003/${this.pluginID}/${activityId}/${shopId}/online/${page}#${routePath}?${query2String(query)}`;
   }
-  @State('pageTitle') pageTitle!: string;
   @Mutation('updateState') updateState!: TMutationFn;
   
   async mounted() {
-    let { data } = await request.get<IResponse<TOnlinePage[]>>('/get_online_pages');
+    let { data } = await localhostRequest.get<IResponse<TDevtoolConfig>>('/get_devtool_config');
     if (data.code === 200) {
-      this.onlinePages = data.data;
+      const { onlinePages, database, pluginID } = data.data;
+      this.onlinePages = onlinePages;
       if (this.onlinePages.length > 0) {
         this.currentPage = this.routeInfo.page = this.onlinePages[0].path;
       }
+      this.updateState({
+        database,
+        pluginID,
+      });
     }
     
-    let configDataWrap = await request.get<IResponse<any>>('mock/get_config_data');
+    let configDataWrap = await localhostRequest.get<IResponse<any>>('mock/get_config_data');
     let configData = configDataWrap.data;
     if (configData.code === 200) {
       this.updateState({
-        configData: configData.data
+        configData: configData.data,
       });
     }
   }
@@ -201,12 +200,6 @@ export default class App extends Vue {
       width: 100%;
       height: 100%;
     }
-  }
-
-  .menu {
-    width: 400px;
-    border-left: solid 1px #ddd;
-    padding: 20px;
   }
 }
 </style>

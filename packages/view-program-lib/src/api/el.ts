@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 13:38:07
+ * @LastEditTime: 2020-08-02 11:02:46
  */
 
 import { navigateTo, buildPath, getInteractKey, buildWebAbsolutePath } from '../common/util';
@@ -10,7 +10,7 @@ import { MESSAGE_CODE } from '../common/constant';
 import { TShareMessage } from '../page';
 import callServerFunction from '../common/network/call-server-function';
 import globalData from '../model/global-data';
-import Assert from '../common/assert';
+import assert from '../common/assert';
 import getEchoData from '../common/network/get-echo-data';
 
 const interactPage = '/pages/interact-webview-miniprogram/interact-webview-miniprogram';
@@ -100,7 +100,7 @@ const pageCodes = {
  */
 export async function navigateELPage(pageCode: keyof typeof pageCodes, params: IGeneralObject<string|number> = {}) {
   let path = pageCodes[pageCode];
-  Assert.notNull(path, `invalid pageCode\`${pageCode}\``);
+  assert.notNull(path, `invalid pageCode\`${pageCode}\``);
   return navigateTo(buildPath(path, params));
 }
 
@@ -122,7 +122,11 @@ export async function getUserInfo(tips: string) {
   let userInfo = await callServerFunction<TUserInfo>({ name: 'getUserInfo' });
   if (!userInfo) {
     let echoKey = getInteractKey();
-    navigateTo(buildPath('pages/login/login', { tips, echoKey }));
+    navigateTo(buildPath('pages/login/login', {
+      tips, 
+      echoKey,
+      save: 'true',
+    }));
     userInfo = await getEchoData<TUserInfo>(echoKey);
   }
   return userInfo;
@@ -136,7 +140,7 @@ export async function getUserInfo(tips: string) {
  * @return: 包含发放结果的promise
  */
 export async function giveCoupon(userId: string, groupId: string) {
-  Assert.equal(!userId || !groupId, true, 'both params `userId` and `groupId` must be given');
+  assert(!userId || !groupId, 'both params `userId` and `groupId` must be given');
   type TCouponRes = {
     success: boolean,
     couponId: string,
@@ -168,7 +172,7 @@ export async function getCouponInfo(groupId: string|string[]) {
   };
   
   // 断言参数
-  Assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
+  assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
   let globalCouponKey = 'couponInfo';
   let couponInfoMap = globalData.get<IGeneralObject<TCouponInfo>>(globalCouponKey) || {};
   let groupIds = Array.isArray(groupId) ? groupId : [groupId];

@@ -1,20 +1,23 @@
 /*
  * @Date: 2020-07-16 15:58:04
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-16 16:06:01
+ * @LastEditTime: 2020-08-02 17:29:35
  */
 
-const { paths } = require("../../config");
+const { paths } = require('../../config');
 const envVariables = require(paths.envVariable.online());
+const pluginConfig = require(paths.pluginFile());
 
 const envConfigurations = {
   development: {
     dist: paths.cacheDirectory,
     envs: envVariables.dev || {},
+    assetsPath: '/',
   },
   production: {
     dist: paths.distDirectory.online,
     envs: envVariables.prod || {},
+    assetsPath: `https://static.ycsh6.com/program/${pluginConfig.pluginID}/online`,
   },
 };
 

@@ -1,5 +1,5 @@
 /*!
-  * view-program-lib 0.2.5 (https://github.com/JOU amjs/view-program-lib)
+  * view-program-lib 0.2.8 (https://github.com/JOU amjs/view-program-lib)
   * API https://github.com/JOU amjs/view-program-lib/blob/master/doc/api.md
   * Copyright 2017-2020 JOU amjs. All Rights Reserved
   * Licensed under MIT (https://github.com/JOU amjs/view-program-lib/blob/master/LICENSE)
@@ -251,10 +251,24 @@ function parseUrlParams(url) {
     });
     return params;
 }
-function parseMpCode(pathname) {
+function parseKeyParams(pathname) {
     if (pathname === void 0) { pathname = ''; }
+    var keyParams = {
+        pluginId: '',
+        activityId: '',
+        shopId: '',
+    };
     pathname = pathname.substr(0, 1) === '/' ? pathname.substr(1) : pathname;
-    return pathname.split('/')[0];
+    var pathDataAry = pathname.split('/');
+    var onlineStrIndex = pathDataAry.indexOf('online');
+    if (onlineStrIndex <= -1) {
+        throw new Error("current url is not a online program's url");
+    }
+    pathDataAry = pathDataAry.slice(0, onlineStrIndex);
+    keyParams.pluginId = pathDataAry[0] || '';
+    keyParams.activityId = pathDataAry[1] || '';
+    keyParams.shopId = pathDataAry[2] || '';
+    return keyParams;
 }
 function getInteractKey(isEcho) {
     if (isEcho === void 0) { isEcho = true; }
@@ -263,7 +277,7 @@ function getInteractKey(isEcho) {
 function buildWebAbsolutePath(_a) {
     var url = _a.url, _b = _a.params, params = _b === void 0 ? {} : _b, _c = _a.routePath, routePath = _c === void 0 ? '' : _c;
     url = url.substr(0, 1) === '/' ? url.substr(1) : url;
-    var relativePath = buildPath("/" + globalData.get('mpCode') + "/" + url + ".html/#/" + routePath, __assign({ activityId: globalData.get('activityId') || '', shopId: globalData.get('shopId') || '' }, params));
+    var relativePath = buildPath("/" + globalData.get('pluginId') + "/" + url + ".html/#/" + routePath, __assign({ activityId: globalData.get('activityId') || '', shopId: globalData.get('shopId') || '' }, params));
     return WEBVIEW_BASE_URL + relativePath;
 }
 
@@ -293,7 +307,9 @@ function interceptor (request) {
                 return response;
             }
             else {
-                console.log('数据返回了非200状态 ==> ', response.data);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('数据返回了非200状态 ==> ', response.data);
+                }
                 return Promise.reject(new Error(response.data.msg));
             }
         }
@@ -438,7 +454,7 @@ function Page(options, globalConfig) {
     }
     else {
         javaRequest.post('/user/interact/save', {
-            key: globalData.get('mpCode'),
+            key: globalData.get('pluginId'),
             value: mpInitData,
         });
     }
@@ -487,25 +503,21 @@ function callServerFunction (options) {
 }
 
 var errorPrefix = 'assert';
-var Assert = (function () {
-    function Assert() {
+function assert(val, message) {
+    if (!val) {
+        throw new Error("[" + errorPrefix + "]" + (message || '参数断言失败'));
     }
-    Assert.notNull = function (val, message) {
-        if (val === null || val === undefined) {
-            throw new Error("[" + errorPrefix + "]" + (message || '参数不能为空'));
-        }
-    };
-    Assert.match = function (val, reg, message) {
-        if (!reg.test(val)) {
-            throw new Error("[" + errorPrefix + "]" + (message || '参数与指定正则表达式不匹配'));
-        }
-    };
-    Assert.equal = function (val, equalVal, message) {
-        if (val !== equalVal) {
-            throw new Error("[" + errorPrefix + "]" + (message || '参数与指定参数不相等'));
-        }
-    };
-    Assert.equalType = function (val, type, message) {
+}
+assert.notNull = function (val, message) {
+    assert(val !== null && val !== undefined, message || '参数不能为空');
+};
+assert.match = function (val, reg, message) {
+    assert(reg.test(val), message || '参数与指定正则表达式不匹配');
+},
+    assert.equal = function (val, equalVal, message) {
+        assert(val === equalVal, message || '参数与指定参数不相等');
+    },
+    assert.equalType = function (val, type, message) {
         var typeAry = Array.isArray(type) ? type : [type];
         var equalPass = false;
         for (var i in typeAry) {
@@ -514,12 +526,8 @@ var Assert = (function () {
                 break;
             }
         }
-        if (!equalPass) {
-            throw new Error("[" + errorPrefix + "]" + (message || '参数与指定类型不匹配'));
-        }
+        assert(equalPass, message || '参数与指定类型不匹配');
     };
-    return Assert;
-}());
 
 function getEchoData (echoKey) {
     var _this = this;
@@ -617,7 +625,7 @@ function navigateELPage(pageCode, params) {
         var path;
         return __generator(this, function (_a) {
             path = pageCodes[pageCode];
-            Assert.notNull(path, "invalid pageCode`" + pageCode + "`");
+            assert.notNull(path, "invalid pageCode`" + pageCode + "`");
             return [2, navigateTo(buildPath(path, params))];
         });
     });
@@ -632,7 +640,11 @@ function getUserInfo(tips) {
                     userInfo = _a.sent();
                     if (!!userInfo) return [3, 3];
                     echoKey = getInteractKey();
-                    navigateTo(buildPath('pages/login/login', { tips: tips, echoKey: echoKey }));
+                    navigateTo(buildPath('pages/login/login', {
+                        tips: tips,
+                        echoKey: echoKey,
+                        save: 'true',
+                    }));
                     return [4, getEchoData(echoKey)];
                 case 2:
                     userInfo = _a.sent();
@@ -645,7 +657,7 @@ function getUserInfo(tips) {
 function giveCoupon(userId, groupId) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            Assert.equal(!userId || !groupId, true, 'both params `userId` and `groupId` must be given');
+            assert(!userId || !groupId, 'both params `userId` and `groupId` must be given');
             return [2, callServerFunction({
                     name: 'giveCoupon',
                     data: { customerId: userId, groupId: groupId },
@@ -659,7 +671,7 @@ function getCouponInfo(groupId) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    Assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
+                    assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
                     globalCouponKey = 'couponInfo';
                     couponInfoMap = globalData.get(globalCouponKey) || {};
                     groupIds = Array.isArray(groupId) ? groupId : [groupId];
@@ -829,9 +841,60 @@ var NamespacedStorage = (function () {
     return NamespacedStorage;
 }());
 
-var commonWord = function (name) { return "forbidden call function `" + name + "`"; }, collectionForbiddenCalledFns = {
+var converterErrors = {
+    argsLength: function (length) {
+        return "function insert expected 1 arg bug got " + length;
+    },
+};
+var argsConverters = {
+    insert: function (val) {
+        assert(val.length === 1, converterErrors.argsLength(val.length));
+        val[0] = Array.isArray(val[0]) ? val[0] : [val[0]];
+        return val;
+    },
+    limit: function (val) {
+        assert(val.length === 1, converterErrors.argsLength(val.length));
+        return val[0];
+    },
+    skip: function (val) {
+        assert(val.length === 1, converterErrors.argsLength(val.length));
+        return val[0];
+    }
+};
+
+var commonWord = function (name) { return "forbidden call function `" + name + "`"; };
+var collectionForbiddenCalledFns = {
     drop: commonWord('drop') + ', instead you can delete collection by editing property `database` in plugin.js',
 };
+var dbForbiddenCalledFns = {
+    dropDatabase: commonWord('dropDatabase'),
+    createDatabase: commonWord('createDatabase'),
+    createCollection: commonWord('createCollection') + ', collections will create automatically when uploading',
+};
+
+function responseConvert (mongoData) {
+    if (Array.isArray(mongoData)) {
+        mongoData = mongoData.map(function (dataItem) {
+            if (typeof dataItem === 'string') {
+                dataItem = JSON.parse(dataItem, function (key, value) {
+                    if (key === '') {
+                        return value;
+                    }
+                    if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+Z$/.test(value)) {
+                        value = new Date(value);
+                    }
+                    else if (typeof value === 'object' && Object.keys(value).length === 1 && value.$oid) {
+                        value = value.$oid;
+                    }
+                    return value;
+                });
+            }
+            return dataItem;
+        });
+    }
+    return mongoData;
+}
+
 function createProxyedPromise(target, handler, executor) {
     var protoProxy = new Proxy(target, handler);
     Object.setPrototypeOf(Promise.prototype, protoProxy);
@@ -850,7 +913,8 @@ function createCollectionProxy(collectionName, activityId) {
                 for (var _i = 0; _i < arguments.length; _i++) {
                     args[_i] = arguments[_i];
                 }
-                target[key] = args;
+                var convertFn = argsConverters[key] || (function (val) { return val; });
+                target[key] = convertFn(args);
                 return collectionProxyedPromise;
             };
         },
@@ -862,9 +926,18 @@ function createCollectionProxy(collectionName, activityId) {
                     method: 'post',
                     data: {
                         activityId: activityId,
+                        pluginId: globalData.get('pluginId'),
+                        env: getMode() === 'plugin-dev' ? 1 : 2,
                         db: proxyObject,
                     },
-                }).then(function (res) { return resolve(res); }, function (rej) { return reject(rej); });
+                }).then(function (_a) {
+                    var data = _a.data;
+                    if (data.code !== 200) {
+                        reject(new Error(data.msg));
+                        return;
+                    }
+                    resolve(responseConvert(data.data));
+                }, function (rej) { return reject(rej); });
             }
             else {
                 resolve({ activityId: activityId, db: proxyObject });
@@ -873,11 +946,6 @@ function createCollectionProxy(collectionName, activityId) {
     });
     return collectionProxyedPromise;
 }
-var dbForbiddenCalledFns = {
-    dropDatabase: commonWord('dropDatabase'),
-    createDatabase: commonWord('createDatabase'),
-    createCollection: commonWord('createCollection') + ', collections will create automatically when uploading',
-};
 function createNamespacedDatabase(activityId) {
     return new Proxy({}, {
         get: function (_, key) {
@@ -891,13 +959,13 @@ function createNamespacedDatabase(activityId) {
 }
 
 var params = parseUrlParams(window.location.href);
-params.mpCode = parseMpCode(window.location.pathname);
-globalData.set(params);
+var keyParams = parseKeyParams(window.location.pathname);
+globalData.set(__assign(__assign({}, params), keyParams));
 var pluginMode = getMode();
-if (!params.activityId || !params.shopId) {
+if (!keyParams.activityId || !keyParams.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }
-var activityId = params.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace), warnGetter = function (storageTag) { return function () { return console.warn("please use `EL." + storageTag + "` with the same usage."); }; };
+var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace), warnGetter = function (storageTag) { return function () { return console.warn("please use `EL." + storageTag + "` with the same usage."); }; };
 if (pluginMode === 'prod') {
     Object.defineProperties(window, {
         localStorage: { get: warnGetter('localStorage') },

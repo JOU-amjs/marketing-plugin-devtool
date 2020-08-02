@@ -1,25 +1,34 @@
 /*
  * @Date: 2020-05-28 09:00:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-06-01 11:06:28
+ * @LastEditTime: 2020-07-29 16:47:30
  */ 
 
 /**
- * @description: 支付回调，此代码会在服务端的支付回调中运行，运行完成后需返回true表示执行成功，否则会多次调用
+ * @description: 支付成功的回调函数，此代码会在服务端的支付回调中运行，运行完成后需返回true表示执行成功，否则会多次调用
  * @author: JOU(wx: huzhen555)
- * @param {ELServer} elserver 服务端操作对象，通过此录入数据、发放卡券等
- * @param {string} intent 支付意图，可选值有`consumption`(消费)，`recharge`(充值)
- * @param {object} params 用户传递的自定义参数，与客户端传递时的相同
- */ 
-async function paymentCallback(elserver) {
+ * @param {ELServer} elServer 服务端操作对象，通过此录入数据、发放卡券等
+ * @returns {boolean} 是否处理成功
+ */
+async function payed(elServer) {
   // TODOS: 支付回调处理
-  if (elserver.getIntent() === 'prePurchase') {
-    await elserver.database.collection('user').update({
-      buyCoupons: [elserver.getClientParams('couponGroupId')],
+  if (elServer.getIntent() === 'prePurchase') {
+    await elServer.database.user.update({
+      buyCoupons: [elServer.getClientParams('couponGroupId')],
     });
   }
-  
   return true;
 }
 
-module.entry = paymentCallback;
+/**
+ * @description: 退款成功的回调函数，此代码会在服务端的退款回调中运行，运行完成后需返回true表示执行成功，否则会多次调用
+ * @author: JOU(wx: huzhen555)
+ * @param {ELServer} elServer 服务端操作对象，通过此录入数据、发放卡券等
+ * @returns {boolean} 是否处理成功
+ */
+async function refund(elServer) {
+  // TODOS: 支付退款回调
+  
+}
+
+module.entry = { payed, refund };

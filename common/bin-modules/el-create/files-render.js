@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-16 10:34:27
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-17 10:30:23
+ * @LastEditTime: 2020-07-21 10:41:54
  */ 
 const { paths } = require("../../../config");
 const fs = require('fs');
@@ -11,7 +11,7 @@ const artTemplate = require("art-template");
 
 const renders = {
   // 基础班模板渲染函数
-  common({ dirname, pluginID, intro, description, name, devid, secret, collection = [] },  filePaths, files) {
+  common({ dirname, pluginID, intro, description, name, devid, type, secret, hasConfigView },  filePaths, files) {
     // 渲染package.json文件内容
     let packageFilePath = filePaths.packageJson;
     if (files[packageFilePath]) {
@@ -27,10 +27,11 @@ const renders = {
         pluginName: name,
         intro,
         description,
-        pluginID: dirname,
+        pluginDirName: dirname,
         devId: devid || '',
         devSecret: secret || '',
-        collectionNames: collection.join(', '),
+        hasConfigView,
+        type,
       });
     }
     
@@ -78,8 +79,15 @@ module.exports = async function(type, options = {}) {
 
   // 读取需要渲染文件的内容
   let fileContents = {};
+  let notExistsFiles = [];
   Object.values(renderFilePaths).forEach(filePath => {
-    fileContents[filePath] = fs.readFileSync(filePath, { encoding: 'utf-8' }).toString();
+    if (fs.existsSync(filePath)) {
+      fileContents[filePath] = fs.readFileSync(filePath, { encoding: 'utf-8' }).toString();
+    }
+    else {
+      notExistsFiles.push(filePath);
+      fileContents[filePath] = '';
+    }
   });
   if (options.dirname) {
     options.pluginID = options.dirname
@@ -89,8 +97,9 @@ module.exports = async function(type, options = {}) {
   fileContents = await renders[type](options, renderFilePaths, fileContents);
   
   // 将渲染后的文件内容回写到对应地址
+  // 如果文件不存在则不写入
   Object.keys(fileContents).forEach(filePath => {
-    if (fileContents[filePath]) {
+    if (notExistsFiles.indexOf(filePath) <= -1) {
       fs.writeFileSync(filePath, fileContents[filePath], 'utf-8');
     }
   });

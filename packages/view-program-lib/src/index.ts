@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:44:14
+ * @LastEditTime: 2020-07-23 11:42:51
  */
 import Page from './page';
 import * as el from './api/el';
@@ -10,23 +10,26 @@ import NamespacedStorage, {LOCAL_STORAGE, SESSION_STORAGE } from './model/namesp
 import createNamespacedDatabase from './model/namespaced-database';
 import globalData from './model/global-data';
 import { MESSAGE_CODE } from './common/constant';
-import { parseUrlParams, parseMpCode, getMode } from './common/util';
+import { parseUrlParams, getMode, parseKeyParams } from './common/util';
 
 /* 初始化 */
 // 解析get参数和插件标识并存储到全局对象中
 let params = parseUrlParams(window.location.href);
-params.mpCode = parseMpCode(window.location.pathname);
-globalData.set(params);
+let keyParams = parseKeyParams(window.location.pathname);
+globalData.set({
+  ...params,
+  ...keyParams,
+});
 const pluginMode = getMode();
 
 // 如果没有shopId和activityId则报错
-if (!params.activityId || !params.shopId) {
+if (!keyParams.activityId || !keyParams.shopId) {
   throw new Error(`query \`activityId\` and \`shopId\` must be given`);
 }
 
 // 初始化各个命名空间下的重要存储对象
 let 
-  { activityId } = params,
+  { activityId } = keyParams,
   namespace = activityId || '',
   localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE),
   sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE),
