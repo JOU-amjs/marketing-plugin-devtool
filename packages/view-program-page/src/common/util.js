@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-23 12:23:34
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 14:09:07
+ * @LastEditTime: 2020-08-07 15:34:35
  */ 
 
 /**
@@ -23,7 +23,7 @@ export function parseKeyParams(pathname) {
   if (onlineStrIndex <= -1) {
     throw new Error(`current url is not a online program's url`);
   }
-  keyParams.page = pathDataAry[onlineStrIndex + 1];
+  keyParams.page = pathDataAry[onlineStrIndex + 1] || 'index';  // page为空时默认为index
   pathDataAry = pathDataAry.slice(0, onlineStrIndex);
   keyParams.pluginId = pathDataAry[0] || '';
   keyParams.activityId = pathDataAry[1] || '';

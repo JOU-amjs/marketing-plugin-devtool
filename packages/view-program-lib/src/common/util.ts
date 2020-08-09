@@ -1,21 +1,21 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-23 11:41:54
+ * @LastEditTime: 2020-08-07 16:21:04
  */
-import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE, WEBVIEW_BASE_URL } from './constant';
+import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
 import wx from './jweixin';
-import { apiSign } from '../common/config';
+import { apiSign, viewProgramPath } from '../common/config';
 import { Md5 } from 'ts-md5';
 import globalData from '../model/global-data';
 
 /**
- * @description: 获取运行环境
+ * @description: 获取运行的所在平台
  * @author: JOU(wx: huzhen555)
  * @return: 运行环境，mpWx/mpAlipay/browser
  */
-export function getEnvironment() {
+export function getPlatform() {
   let userAgent = '';
   try {
     userAgent = window.navigator.userAgent.toLowerCase();
@@ -33,9 +33,7 @@ export function getEnvironment() {
   else if (userAgent.indexOf('node') !== -1) {
     return NODE;
   }
-  else {
-    return BROWSER;
-  }
+  return BROWSER;
 }
 
 type TParam = IGeneralObject<string|number>;
@@ -67,7 +65,7 @@ export function buildPath(url: string, params: TParam = {}) {
  * @return: 调用成功与否的promise
  */
 export async function navigateTo(url: string, params: TParam = {}) {
-  let environment = getEnvironment();
+  let environment = getPlatform();
   return new Promise<any>((resolve, reject) => {
     if (environment === MP_WEIXIN) {
       wx.miniProgram.navigateTo({
@@ -89,7 +87,7 @@ export async function navigateTo(url: string, params: TParam = {}) {
  * @return: 调用成功与否的promise
  */
 export async function navigateBack(delta = 1) {
-  let environment = getEnvironment();
+  let environment = getPlatform();
   return new Promise<any>((resolve, reject) => {
     if (environment === MP_WEIXIN) {
       wx.miniProgram.navigateBack({
@@ -111,7 +109,7 @@ export async function navigateBack(delta = 1) {
  */
 export function getMode() {
   let devMode = globalData.get<string>('devMode');
-  return devMode?.toString() === '1' && getEnvironment() === 'browser' ? 'plugin-dev' : 'prod';
+  return devMode?.toString() === '1' && getPlatform() === 'browser' ? 'plugin-dev' : 'prod';
 }
 
 /**
@@ -181,27 +179,32 @@ export function getInteractKey(isEcho = true) {
   return (globalData.get<string>('activityId') || '') + (globalData.get<string>('token') || '') + (isEcho ? '-echo' : '');
 }
 
-
-export type TNavOptions = {
-  url: string,
-  routePath?: string,
-  params?: IGeneralObject<string|number>,
-};
 /**
- * @description: 构建web页的绝对路径
+ * @description: 构建插件页的跳转路径
  * @author: JOU(wx: huzhen555)
- * @param {TNavOptions}  options 跳转路径的参数对象
+ * @param {string} path 页面路径
+ * @param {string} routePath 路由路径
+ * @param {string} query 参数对象
  * @return: 构建后的路径
  */
-export function buildWebAbsolutePath({ url, params = {}, routePath = '' }: TNavOptions) {
-  url = url.substr(0, 1) === '/' ? url.substr(1) : url;   // 如果路径以`/`开头，则去掉
-  
-  // 相对路径格式为：[pluginId]/[url.html]/#/[routePath]?xx=xx&yy=yy
-  // 全路径示例：https://mp.online.ycsh6.com/7asd897gasd90f/pages/index.html/#/second?activityId=2211&shopId=113
-  let relativePath = buildPath(`/${globalData.get<string>('pluginId')}/${url}.html/#/${routePath}`, {
+export function getMPPath(path: string, routePath = '', query = {}, hasBasePath = true) {
+  return buildPath(hasBasePath ? viewProgramPath : '', {
     activityId: globalData.get<string>('activityId') || '',
+    pluginId: globalData.get<string>('pluginId') || '',
     shopId: globalData.get<string>('shopId') || '',
-    ...params,
+    path,
+    routePath,
+    query: encodeURIComponent(JSON.stringify(query || {}))
   });
-  return WEBVIEW_BASE_URL + relativePath;
+}
+
+/**
+ * @description: 格式化时间
+ * @author: JOU(wx: huzhen555)
+ * @param {Date} time 需要格式化的Date对象
+ * @return {string} 格式化后的时间字符串
+ */
+export function formatTime(time: Date) {
+  const fillZero = (num: number) => num >= 0 && num < 10 ? ('0' + num) : num.toString();
+  return `${time.getFullYear()}-${fillZero(time.getMonth() + 1)}-${fillZero(time.getDate())} ${fillZero(time.getHours())}:${fillZero(time.getMinutes())}`;
 }

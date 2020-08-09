@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 17:58:49
+ * @LastEditTime: 2020-08-06 10:51:07
  */
 'use strict'
 const { paths, moduleUrls } = require('../../config');
@@ -9,13 +9,14 @@ const { getEnvConfiguration } = require('./env');
 const { createWebpackEnvPlugin, buildWebpackAlias, getDevtool } = require('../common-webpack-config');
 const envConfig = getEnvConfiguration();
 
-
 module.exports = {
   mode: 'development',  // 这样才不自动压缩代码
   entry: paths.offline(),
   output: {
     path: envConfig.dist,
     filename: 'index.js',
+    library: 'mpClass',
+    libraryTarget: 'this',
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],

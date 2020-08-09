@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:38
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 18:02:55
+ * @LastEditTime: 2020-08-05 12:44:13
  */ 
 const commander = require('commander');
 const chalk = require('chalk');
@@ -25,8 +25,6 @@ const path = require('path');
 const { getPluginType } = require('../common/util');
 const javaRequest = require('../common/java-request');
 const dataAssert = require('../common/common-assert');
-const pluginConfig = require(paths.pluginFile());
-
 
 commander
   .name('el')
@@ -35,7 +33,14 @@ commander
   .parse();
 
 process.env.NODE_ENV = 'production';
+let spinner = ora(chalk.dim('检查编译文件...')).start();
 
+// 检查plugin.json是否
+if (!existsSync(paths.pluginFile())) {
+  spinner.fail(chalk.redBright('😣未在根目录找到plugin.json'));
+  process.exit(1);
+}
+const pluginConfig = require(paths.pluginFile());
 
 // 参数验证
 dataAssert.assertPluginName(pluginConfig.name);
@@ -46,9 +51,8 @@ dataAssert.assertPluginID(pluginConfig.pluginID);
 dataAssert.assertDeveloper(pluginConfig.developer || {});
 dataAssert.assertIcon(pluginConfig.icon);
 
-
+spinner.text = chalk.dim('编译中...');
 // 插件类型验证
-let spinner = ora(chalk.dim('编译中...')).start();
 const readTips = '，具体请看：' + chalk.blue('https://test.ycsh6.com/readme');
 let pluginType = '';
 try {
@@ -59,7 +63,7 @@ try {
   });
 } catch (error) {
   console.log(error);
-  spinner.fail('😣发布失败，该插件线上线下两部分的目录结构均缺失' + readTips);
+  spinner.fail(chalk.redBright('😣发布失败，该插件线上线下两部分的目录结构均缺失' + readTips));
   process.exit(1);
 }
 
@@ -67,26 +71,45 @@ try {
 // 编译打包
 (async () => {
   try {
+    // 根据插件类型打包不同部分
+    const builder = [];
+    const configViewBuildFn = pluginConfig.hasConfigView ? () => configViewServer.build() : () => Promise.resolve();
+    if (pluginType === 1) {
+      if (!pluginConfig.onlinePages || pluginConfig.onlinePages.length <= 0) {
+        spinner.fail(chalk.redBright('😣发布失败，未在plugin.json中找到onlinePages数组'));
+        process.exit(1);
+      }
+      else {
+        builder.push(configViewBuildFn(), onlineServer.build());
+      }
+    }
+    else if (pluginType === 2) {
+      builder.push(configViewBuildFn(), offlineServer.build());
+    }
+    else {
+      builder.push(configViewBuildFn(), onlineServer.build(), offlineServer.build());
+    }
+
+    builder.push(
+      // 拷贝静态资源到目标目录(先判断是否存在)
+      existsSync(paths.assets()) ? cpy('**/*', paths.distDirectory.assets, {
+        parents: true,
+        cwd: paths.assets()
+      }) : Promise.resolve(),
+
+      // 拷贝服务端代码文件夹到目标目录(先判断是否存在)
+      existsSync(paths.serverDirectory()) ? cpy('**/*', paths.distDirectory.server, {
+        parents: true,
+        cwd: paths.serverDirectory()
+      }) : Promise.resolve()
+    );
+    
     rm.sync(paths.distDirectory.root);
     await Promise.all([
-      configViewServer.build(),
-      onlineServer.build(),
-      offlineServer.build(),
+      ...builder,
       
       // 拷贝plugin.json到目标目录
       cpy(paths.pluginFile(), paths.distDirectory.root),
-      
-      // 拷贝静态资源到目标目录
-      cpy('**/*', paths.distDirectory.assets, {
-        parents: true,
-        cwd: paths.assets()
-      }),
-
-      // 拷贝服务端代码文件夹到目标目录
-      cpy('**/*', paths.distDirectory.server, {
-        parents: true,
-        cwd: paths.serverDirectory()
-      })
     ]);
     spinner.succeed(chalk.green('🤗编译成功。'));
     
@@ -130,6 +153,6 @@ try {
     spinner.succeed(chalk.bgGreen('SUCCESS') + chalk.green(' 发布成功，请前往查看商户端查看🎉🎉🎉'));
   } catch (error) {
     console.error('\nError:', error);
-    spinner.fail('🙄发布失败，请重试。');
+    spinner.fail(chalk.redBright('🙄发布失败，请重试'));
   }
 })();

@@ -1,32 +1,28 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-14 11:24:37
+ * @LastEditTime: 2020-08-07 16:12:58
  */
 import {
   navigateTo, 
   navigateBack, 
-  TNavOptions, 
-  buildWebAbsolutePath, 
   parseUrlParams,
   buildPath,
-  getMode
+  getMode,
+  getMPPath
 } from '../common/util';
 import globalData from '../model/global-data';
 import { message } from '../common/message';
+import { TShareMessage, TNavOptions } from '../page';
 
-// 视图插件页面路径
-const viewProgramPath = 'pages/webview-container/webview-container';
 
 /**
  * @description: 基于小程序的页面跳转
  * @author: JOU(wx: huzhen555)
  * @param {TNavOptions}  options 跳转路径的参数对象
  */
-export function mpNavigateTo(options: TNavOptions) {
-  return navigateTo(viewProgramPath, {
-    url: window.encodeURIComponent(buildWebAbsolutePath(options)),
-  });
+export function mpNavigateTo({ path, routePath, query }: TNavOptions) {
+  return navigateTo(getMPPath(path, routePath, query));
 }
 
 /**
@@ -63,7 +59,7 @@ export function setTitle(title: string) {
  * @author: JOU(wx: huzhen555)
  * @param {TNavOptions} shareOptions 分享的内容
  */
-export function updateShareMessage(shareOptions: TNavOptions) {
+export function updateShareMessage(shareOptions: TShareMessage) {
   let matches = (location.hash.match(/^(.*?)(\?.*)?$/) || ['', '', '']);
   let params = parseUrlParams(matches[2]);
   params.shareMessage = encodeURIComponent(JSON.stringify(shareOptions));

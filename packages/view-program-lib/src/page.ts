@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-20 18:14:50
+ * @LastEditTime: 2020-08-07 16:11:24
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
@@ -20,13 +20,15 @@ interface IRouterOptions extends RouterOptions {
   afterEach?(hook: (to: Route, from: Route) => any): Function,
 }
 
-export type TShareMessage = {
+export type TNavOptions = {
   path: string,
-  title: string,
   routePath?: string,
-  params?: IGeneralObject<string|number>,
-  imageUrl?: string,
+  query?: IGeneralObject<string|number>,
 };
+export type TShareMessage = {
+  title: string,
+  imageUrl?: string,
+} & TNavOptions;
 
 // 对Vue的参数进行扩展
 type IAnyObject = IGeneralObject<any>;
@@ -75,9 +77,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
   
   // 将小程序的初始化参数传递给小程序
   // 相同插件的初始化数据一定是相同的，所以这边使用pluginId作为key
-  let mpInitData = {
-    shareMessage,
-  };
+  let mpInitData = { shareMessage };
   globalData.set('mpInitData', mpInitData);
   if (getMode() === 'plugin-dev') {
     message.init(window.parent);

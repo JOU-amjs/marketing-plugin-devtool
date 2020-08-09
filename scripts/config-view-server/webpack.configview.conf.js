@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 17:57:11
+ * @LastEditTime: 2020-08-06 10:27:52
  */
 'use strict'
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
@@ -17,6 +17,8 @@ module.exports = {
   output: {
     path: envConfig.dist,
     filename: 'index.js',
+    library: 'mpViewComponent',
+    libraryTarget: 'this',
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 13:45:51
+ * @LastEditTime: 2020-08-05 12:44:21
  */ 
 const commander = require('commander');
 const ora = require('ora');
@@ -10,10 +10,11 @@ const devtoolServer = require('../scripts/devtool-server');
 const configViewServer = require('../scripts/config-view-server');
 const onlineServer = require('../scripts/online-server');
 // const offlineServer = require('../scripts/offline-server');
-const { moduleUrls } = require('../config');
+const { moduleUrls, paths } = require('../config');
 const { buildURL } = require('../common/util');
 const chalk = require('chalk');
 const { getPluginType } = require('../common/util');
+const pluginConfig = require(paths.pluginFile());
 
 commander
   .name('el')
@@ -24,7 +25,6 @@ commander
 
 const [ pluginEnvironment ] = commander.args;
 assert.strict.match(pluginEnvironment, /^online|offline$/, chalk.redBright('请指定营销插件开发环境，可选项为`online`或`offline`'));
-assert.notStrictEqual(pluginEnvironment, 'offline', chalk.redBright('抱歉，线下插件开发功能暂未上线'));  // 临时添加
 assert.strict.match(commander.runtimeEnvironment, /^dev|prod$/, chalk.redBright('请指定正确的营销插件运行环境，可选值为`dev`或`prod`'));
 
 // 将环境变量设置为对应值
@@ -58,12 +58,23 @@ process.env.NODE_ENV = envs[commander.runtimeEnvironment];
     process.exit(1);
   }
   
+  const configViewStartFn = pluginConfig.hasConfigView ? () => configViewServer.start() : () => Promise.resolve();
   const pluginTypeInfo = pluginTypeTips[pluginType];
-  await Promise.all([
-    devtoolServer.start(),
-    configViewServer.start(),
-    onlineServer.start(),
-  ]);
+  const starter = [];
+  if (pluginEnvironment === 'online') {
+    if (!pluginConfig.onlinePages || pluginConfig.onlinePages.length <= 0) {
+      spinner.fail(chalk.redBright('😣启动失败，未在plugin.json中找到onlinePages数组'));
+      process.exit(1);
+    }
+    else {
+      starter.push(devtoolServer.start(), configViewStartFn(), onlineServer.start());
+    }
+  }
+  else if (pluginEnvironment === 'offline') {
+    starter.push(devtoolServer.start(), configViewStartFn());    // 暂时缺少onlineServer.start()
+  }
+  
+  await Promise.all(starter);
   console.log('\n\n');
   spinner.succeed(chalk.bgGreen('SUCCESS') + chalk.green(' 启动成功🎉🎉🎉'));
   console.log('\n');

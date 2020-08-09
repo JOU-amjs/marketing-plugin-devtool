@@ -1,10 +1,10 @@
 /*
  * @Date: 2020-05-28 10:45:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-20 20:35:16
+ * @LastEditTime: 2020-08-07 10:09:00
  */
 import { AxiosInstance } from 'axios';
-import { getEnvironment, createApiSign } from '../util';
+import { getPlatform, createApiSign } from '../util';
 import globalData from '../../model/global-data';
  
 // 客户端每个接口需要统一传以下参数：
@@ -14,7 +14,7 @@ import globalData from '../../model/global-data';
 export default function (request: AxiosInstance) {
   request.interceptors.request.use(config => {
     const 
-      platform = getEnvironment(),
+      platform = getPlatform(),
       accessToken = globalData.get<string>('accessToken') || '',
       timestamp = Date.parse(new Date().toString()) / 1000;
 

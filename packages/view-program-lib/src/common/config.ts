@@ -1,8 +1,10 @@
 /*
  * @Date: 2020-04-11 22:47:32
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 15:45:16
+ * @LastEditTime: 2020-08-07 15:40:19
  */
+
+import { MP_WEIXIN, MP_ALIPAY } from './constant';
 
 // 根据环境变量返回对应数据
 type TRuntimeEnv = {
@@ -28,7 +30,7 @@ export const host = environmentValue({
 });
 export const javaHost = environmentValue({
   'plugin-dev': 'http://148.70.36.197:8080',
-  prod: 'http://148.70.36.197:8080',
+  prod: 'https://api.java.ycsh6.com',
 });
 
 // 用于接口签名的key和分隔符，需与服务器一致
@@ -37,3 +39,18 @@ export const apiSign = {
   key: 'sd8mow3RPMDS0PMPmMP98AS2RG43T',
   // key: '',
 };
+
+// 订阅的消息模板的代码和id映射
+export const tmplCodeMap = {
+  [MP_WEIXIN]: {
+    activity: 'i5sdedogJeiICuz0dfX-FC2yBdRdkwwcxCg1okRmnys',
+    payResult: '',
+  },
+  [MP_ALIPAY]: {
+    activity: '',
+    payResult: '',
+  },
+}
+
+// 视图插件页面路径
+export const viewProgramPath = 'pages/webview-container/webview-container';

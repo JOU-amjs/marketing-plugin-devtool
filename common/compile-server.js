@@ -1,10 +1,11 @@
 /*
  * @Date: 2020-07-18 12:52:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:05:50
+ * @LastEditTime: 2020-08-05 11:51:16
  */ 
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
+const chalk = require('chalk');
 
 module.exports = class CompileServer {
   host = '';

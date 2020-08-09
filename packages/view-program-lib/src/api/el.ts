@@ -1,17 +1,25 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 11:02:46
+ * @LastEditTime: 2020-08-07 16:21:32
  */
 
-import { navigateTo, buildPath, getInteractKey, buildWebAbsolutePath } from '../common/util';
+import {
+  navigateTo,
+  buildPath,
+  getInteractKey,
+  formatTime,
+  getPlatform,
+  getMPPath
+} from '../common/util';
 import { IGeneralObject } from '../common/common.inter';
-import { MESSAGE_CODE } from '../common/constant';
+import { MESSAGE_CODE, MP_WEIXIN, MP_ALIPAY } from '../common/constant';
 import { TShareMessage } from '../page';
 import callServerFunction from '../common/network/call-server-function';
 import globalData from '../model/global-data';
 import assert from '../common/assert';
 import getEchoData from '../common/network/get-echo-data';
+import { tmplCodeMap } from '../common/config';
 
 const interactPage = '/pages/interact-webview-miniprogram/interact-webview-miniprogram';
 type TPayOptions = {
@@ -42,27 +50,86 @@ export async function pay(payOptions: TPayOptions) {
   return getEchoData<any>(echoKey);
 }
 
-type TNoticeOptions = {
-  tmplCodes: (keyof typeof MESSAGE_CODE)[],
-  tipText?: string,
-  btnText?: string,
-};
+type TNoticeBased<T, U> = IGeneralObject<{
+  notifyData: IGeneralObject<{value: string}>,
+  timing?: T,
+  channel?: string,
+  path: string,
+  routePath?: string,
+  query?: U extends number ? IGeneralObject<string|number> : string,  // 传递到营销插件中的参数，可通过this.$route.query获取
+}>;
 /**
  * @description: 订阅消息
  * @author: JOU(wx: huzhen555)
  * @param {array} tmplCodes 模板code数组
  * @return: 订阅结果的promise
  */
-export async function subscribeMessage(noticeOptions: TNoticeOptions) {
+export async function subscribeMessage(options: TNoticeBased<Date, number>, tipText?: string, btnText?: string,) {
+  let messageNames = Object.keys(options) as (keyof typeof MESSAGE_CODE)[];
+  assert(messageNames.length > 0, '请至少订阅一条消息');
+  Object.keys(options).forEach(msgCode => {
+    let { timing, channel, notifyData } = options[msgCode];
+    assert(timing instanceof Date || typeof channel === 'string', `[MESSAGE_CODE:${msgCode}]必须指定timing或channel其中之一`);
+    assert(Object.keys(notifyData).length > 0, `[MESSAGE_CODE:${msgCode}]模板数据不能为空`);
+  });
+  let platform = getPlatform();
+  if (platform !== MP_WEIXIN && platform !== MP_ALIPAY) {
+    throw new Error(`'${platform}'平台上不支持订阅消息`);
+  }
+  
+  let platformMsgCodeMap = tmplCodeMap[platform];
+  let tmplIds = messageNames.map(msgName => platformMsgCodeMap[msgName]).filter(tmplId => tmplId);
+  assert(tmplIds.length > 0, '请传入有效的消息名');
+
   let echoKey = getInteractKey();
   navigateTo(interactPage, {
     data: window.encodeURIComponent(JSON.stringify({
       intent: 'notice',
       echoKey,
-      payload: noticeOptions,
+      payload: {
+        tmplIds,
+        tipText,
+        btnText,
+      },
     })),
   });
-  return getEchoData<any>(echoKey);
+
+  type TSubscribeResult = IGeneralObject<'accept'|'reject'|'ban'>;
+  let subscribeRes = await getEchoData<TSubscribeResult>(echoKey);
+  
+  const resAvailable: TNoticeBased<string, string> = {};
+  // 过滤出订阅成功的模板消息，发送到服务端
+  for (let tmplId in subscribeRes) {
+    let optionMsgData = options[tmplId];
+    if (subscribeRes[tmplId] === 'accept' && optionMsgData) {
+      resAvailable[tmplId] = {
+        notifyData: optionMsgData.notifyData,
+        timing: optionMsgData.timing ? formatTime(optionMsgData.timing) : '',
+        channel: optionMsgData.channel,
+        path: getMPPath(
+          optionMsgData.path,
+          optionMsgData.routePath,
+          optionMsgData.query ? window.encodeURIComponent(JSON.stringify(optionMsgData.query)) : '',
+          false
+        ),
+      };
+    }
+  }
+  await callServerFunction({
+    name: 'subscribeMessage',
+    data: resAvailable,
+  });
+
+  // 将模板名称=>模板id转换成模板id=>模板名称的对象
+  let tmplId2NameMap: IGeneralObject<string> = {};
+  for (let name in platformMsgCodeMap) {
+    tmplId2NameMap[platformMsgCodeMap[name as keyof typeof platformMsgCodeMap]] = name;
+  }
+  const resTransform = {};
+  Object.keys(subscribeRes).forEach(tmplId => {
+    subscribeRes[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
+  });
+  return resTransform;
 }
 
 /**
@@ -75,12 +142,9 @@ export async function share(shareOptions: TShareMessage) {
     data: window.encodeURIComponent(JSON.stringify({
       intent: 'share',
       payload: {
-        ...shareOptions,
-        absolutePath: buildWebAbsolutePath({
-          url: shareOptions.path,
-          routePath: shareOptions.routePath,
-          params: shareOptions.params,
-        }),
+        title: shareOptions.title,
+        imageUrl: shareOptions.imageUrl,
+        path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
       },
     })),
   });

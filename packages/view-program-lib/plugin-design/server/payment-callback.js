@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-05-28 09:00:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-29 16:47:30
+ * @LastEditTime: 2020-08-07 17:17:05
  */ 
 
 /**
@@ -31,4 +31,4 @@ async function refund(elServer) {
   
 }
 
-module.entry = { payed, refund };
+module.exports = { payed, refund };
