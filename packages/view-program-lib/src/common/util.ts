@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-10 16:42:29
+ * @LastEditTime: 2020-08-11 14:04:22
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -209,5 +209,5 @@ export function getMPPath(path: string, routePath = '', query = {}, hasBasePath 
  */
 export function formatTime(time: Date) {
   const fillZero = (num: number) => num >= 0 && num < 10 ? ('0' + num) : num.toString();
-  return `${time.getFullYear()}-${fillZero(time.getMonth() + 1)}-${fillZero(time.getDate())} ${fillZero(time.getHours())}:${fillZero(time.getMinutes())}`;
+  return `${time.getFullYear()}-${fillZero(time.getMonth() + 1)}-${fillZero(time.getDate())} ${fillZero(time.getHours())}:${fillZero(time.getMinutes())}:${fillZero(time.getSeconds())}`;
 }

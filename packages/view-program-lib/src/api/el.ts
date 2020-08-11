@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-10 16:59:40
+ * @LastEditTime: 2020-08-11 14:04:15
  */
 
 import {
@@ -38,7 +38,7 @@ type TPayOptions = {
 export async function pay(payOptions: TPayOptions) {
   let echoKey = getInteractKey();
   navigateTo(interactPage, {
-    data: window.encodeURIComponent(JSON.stringify({
+    data: encodeURIComponent(JSON.stringify({
       intent: 'pay',
       echoKey,
       payload: {
@@ -73,6 +73,9 @@ export async function subscribeMessage(options: TNoticeBased<Date, number>, tipT
     assert(Object.keys(notifyData).length > 0, `[MESSAGE_CODE:${msgCode}]模板数据不能为空`);
   });
   let platform = getPlatform();
+  if (process.env.NODE_ENV !== 'production') {
+    platform = MP_WEIXIN;
+  }
   if (platform !== MP_WEIXIN && platform !== MP_ALIPAY) {
     throw new Error(`'${platform}'平台上不支持订阅消息`);
   }
@@ -81,27 +84,39 @@ export async function subscribeMessage(options: TNoticeBased<Date, number>, tipT
   let tmplIds = messageNames.map(msgName => platformMsgCodeMap[msgName as keyof typeof platformMsgCodeMap])
   .filter(tmplId => tmplId);
   assert(tmplIds.length > 0, '请传入有效的消息名');
-
   let echoKey = getInteractKey();
-  navigateTo(interactPage, {
-    data: window.encodeURIComponent(JSON.stringify({
-      intent: 'notice',
-      echoKey,
-      payload: {
-        tmplIds,
-        tipText,
-        btnText,
-      },
-    })),
-  });
+  if (process.env.NODE_ENV === 'production') {
+    navigateTo(interactPage, {
+      data: encodeURIComponent(JSON.stringify({
+        intent: 'notice',
+        echoKey,
+        payload: {
+          tmplIds,
+          tipText,
+          btnText,
+        },
+      })),
+    });
+  }
 
   type TSubscribeResult = IGeneralObject<'accept'|'reject'|'ban'>;
-  let subscribeRes = await getEchoData<TSubscribeResult>(echoKey);
+  let subscribeRes: TSubscribeResult = {};
+  if (process.env.NODE_ENV === 'production') {
+    subscribeRes = await getEchoData<TSubscribeResult>(echoKey);
+  }
+  else {
+    tmplIds.forEach(tmplId => subscribeRes[tmplId] = 'accept');
+  }
   
+  // 将模板名称=>模板id转换成模板id=>模板名称的对象
+  let tmplId2NameMap: IGeneralObject<string> = {};
+  for (let name in platformMsgCodeMap) {
+    tmplId2NameMap[platformMsgCodeMap[name as keyof typeof platformMsgCodeMap]] = name;
+  }
   const resAvailable: TNoticeBased<string, string> = {};
   // 过滤出订阅成功的模板消息，发送到服务端
   for (let tmplId in subscribeRes) {
-    let optionMsgData = options[tmplId];
+    let optionMsgData = options[tmplId2NameMap[tmplId]];
     if (subscribeRes[tmplId] === 'accept' && optionMsgData) {
       resAvailable[tmplId] = {
         notifyData: optionMsgData.notifyData,
@@ -110,25 +125,25 @@ export async function subscribeMessage(options: TNoticeBased<Date, number>, tipT
         path: getMPPath(
           optionMsgData.path,
           optionMsgData.routePath,
-          optionMsgData.query ? window.encodeURIComponent(JSON.stringify(optionMsgData.query)) : '',
+          optionMsgData.query ? encodeURIComponent(JSON.stringify(optionMsgData.query)) : '',
           false
         ),
       };
     }
   }
-  await callServerFunction({
-    name: 'subscribeMessage',
-    data: resAvailable,
-  });
-
-  // 将模板名称=>模板id转换成模板id=>模板名称的对象
-  let tmplId2NameMap: IGeneralObject<string> = {};
-  for (let name in platformMsgCodeMap) {
-    tmplId2NameMap[platformMsgCodeMap[name as keyof typeof platformMsgCodeMap]] = name;
+  if (process.env.NODE_ENV === 'production') {
+    await callServerFunction({
+      name: 'subscribeMessage',
+      data: resAvailable,
+    });
   }
-  const resTransform = {};
+  else {
+    console.log(resAvailable);
+  }
+
+  const resTransform: TSubscribeResult = {};
   Object.keys(subscribeRes).forEach(tmplId => {
-    subscribeRes[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
+    resTransform[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
   });
   return resTransform;
 }
