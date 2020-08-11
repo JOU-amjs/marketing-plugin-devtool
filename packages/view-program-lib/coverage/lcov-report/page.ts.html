@@ -204,8 +204,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -243,6 +241,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -285,7 +285,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
 <span class="cstat-no" title="statement not covered" > * @Date: 2020-04-09 14:05:19</span>
  * @LastEditor<span class="cstat-no" title="statement not covered" >s: JOU(wx: huzhen</span>555)
- * @LastEdit<span class="cstat-no" title="statement not covered" >Time: 2020-07-20 18:14:50</span>
+ * @LastEdit<span class="cstat-no" title="statement not covered" >Time: 2020-08-07 16:11:24</span>
  */<span class="cstat-no" title="statement not covered" ></span>
 import Vue, {<span class="cstat-no" title="statement not covered" > ComponentOptions, PluginObject, PluginFu</span>nction } from 'vue';
 import VueRouter<span class="cstat-no" title="statement not covered" >, { RouterOptions, Navigatio</span>nGuard, Route } from 'vue-router';
@@ -304,64 +304,64 @@ interfac<span class="cstat-no" title="statement not covered" >e IRouterOptions e
   af<span class="cstat-no" title="statement not covered" >terEach?(hook: (to: Route, from: Route) =&gt; any): Function,</span>
 }<span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" ></span>
-export t<span class="cstat-no" title="statement not covered" >ype TShareMessage = {<span class="fstat-no" title="function not covered" ></span></span>
+export t<span class="cstat-no" title="statement not covered" >ype TNavOptions = {<span class="fstat-no" title="function not covered" ></span></span>
   path: stri<span class="cstat-no" title="statement not covered" >ng,</span>
+  routePath?: st<span class="cstat-no" title="statement not covered" >ring,</span>
+  query?: IGeneralObject&lt;string|number&gt;,
+};
+export type TShareMessage = {
   title: string,<span class="cstat-no" title="statement not covered" ></span>
-  routePath?: string,
-  params?: IGeneralObject&lt;string|number&gt;,
-  imageUrl?: string,
-};<span class="cstat-no" title="statement not covered" ></span>
+  im<span class="cstat-no" title="statement not covered" >ageUrl?: string,</span>
+} &amp; TNav<span class="cstat-no" title="statement not covered" >Options;</span>
 <span class="cstat-no" title="statement not covered" ></span>
-// 对Vue的<span class="cstat-no" title="statement not covered" >参数进行扩展</span>
-type IAn<span class="cstat-no" title="statement not covered" >yObject = IGeneralObject&lt;any&gt;;</span>
-type TELPlugin = [ PluginObject&lt;any&gt;|PluginFunction&lt;any&gt;, any ];
-inte<span class="cstat-no" title="statement not covered" >rface IGlobalConfig {</span>
-  router<span class="cstat-no" title="statement not covered" >s?: IRouterOptio<span class="fstat-no" title="function not covered" >ns</span>,</span>
-  stores?: StoreOptions&lt;IAnyObjec<span class="cstat-no" title="statement not covered" >t&gt;,<span class="cstat-no" title="statement not covered" ></span></span>
-  plugins?: <span class="cstat-no" title="statement not covered" >TELPlugin[],</span>
-  title: string|(() =&gt; string|Promise&lt;string&gt;),
-  shareMessage?: TShareMessage,
+// 对Vue的参数进行扩展
+type<span class="cstat-no" title="statement not covered" > IAnyObject = IGeneralObject&lt;any&gt;;</span>
+type TEL<span class="cstat-no" title="statement not covered" >Plugin = [ Plugi<span class="fstat-no" title="function not covered" >nO</span>bject&lt;any&gt;|PluginFunction&lt;any&gt;, any ];</span>
+interface IGlobalConfig {<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ></span></span>
+  routers?: <span class="cstat-no" title="statement not covered" >IRouterOptions,</span>
+  stores?: StoreOptions&lt;IAnyObject&gt;,
+  plugins?: TELPlugin[],
+  title: string|(() =<span class="cstat-no" title="statement not covered" >&gt; string|Promise&lt;string&gt;),</span>
+  sh<span class="cstat-no" title="statement not covered" >areMessage?: TShareMessage,</span>
 }<span class="cstat-no" title="statement not covered" ></span>
-&nbsp;
-let routerHookNames: ('beforeEach'|'beforeResolve'|'afterEach')[] = ['beforeEach', 'beforeResolve', 'afterEach'];
-expo<span class="cstat-no" title="statement not covered" >rt default function Page (options: ComponentOptions&lt;V</span>ue&gt; = {}, globalConfig: IGlobalConfig = { title: '' }) {
-  if<span class="cstat-no" title="statement not covered" > (Object.keys(options).length &lt;= 0) {</span>
-    retu<span class="cstat-no" title="statement not covered" >rn { Vue, VueRouter, Vuex };</span>
-  }<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-  <span class="cstat-no" title="statement not covered" ></span>
-  // 如果route<span class="cstat-no" title="statement not covered" >rs是对象，则创建VueRouter</span>
+<span class="cstat-no" title="statement not covered" ></span>
+let rout<span class="cstat-no" title="statement not covered" >erHookNames: ('beforeEach'|'beforeR<span class="fstat-no" title="function not covered" >es</span>olve'|'afterEach')[] = ['beforeEach', 'beforeResolve', 'afterEach'];</span>
+export defau<span class="cstat-no" title="statement not covered" >lt function Page (options: ComponentOptions&lt;Vue&gt; = {}, globa</span>lConfig: IGlobalConfig = { title: '' }) {
+  if (Object<span class="cstat-no" title="statement not covered" >.keys(options).length &lt;= 0) {</span>
+    return { Vue, VueRouter, Vuex };
+  }
+  
+  // 如果r<span class="cstat-no" title="statement not covered" >outers是对象，则创建VueRouter</span>
   let router: VueRouter|undefined = undefined, { routers, stores, plugins, shareMessage, title } = globalConfig;
   if (typeof routers === 'object' &amp;&amp; Array.isArray(routers.routes) &amp;&amp; routers.routes.length &gt; 0) {
     Vue.use(VueRouter);
-    rout<span class="cstat-no" title="statement not covered" >er = new VueRouter(routers);</span>
-    
-    // 如果注册了全局钩子函数则绑定它们
+    router = new VueRouter(routers);
+    <span class="cstat-no" title="statement not covered" ></span>
+    // 如<span class="cstat-no" title="statement not covered" >果注册了全局钩子函数则绑定它们</span>
     routerHookNames.forEach((hookName) =&gt; {
-      if (routers &amp;&amp; router &amp;&amp; typeof routers[hookName] === 'function') {
-<span class="cstat-no" title="statement not covered" >        router[hookName](routers[hookName] as any);</span>
+      if <span class="cstat-no" title="statement not covered" >(routers &amp;&amp; router &amp;&amp; typeof routers[hookName] === 'function') {</span>
+        router[hookNam<span class="cstat-no" title="statement not covered" >e](route</span>rs[hookName] as any);
       }<span class="cstat-no" title="statement not covered" ></span>
-    });
-  }<span class="cstat-no" title="statement not covered" ></span>
+    });<span class="cstat-no" title="statement not covered" ></span>
+  }
 <span class="cstat-no" title="statement not covered" ></span>
-  // 如果s<span class="cstat-no" title="statement not covered" >tores是对象，则创建Vuex.Store对象</span>
-  let store:<span class="cstat-no" title="statement not covered" > Store&lt;IAnyObject&gt;|undef</span>ined = undefined;
-  if (typeof stores === 'object' &amp;&amp; Object.keys(stores).length &gt; 0) {
-    Vue.use(V<span class="cstat-no" title="statement not covered" >uex);</span>
-    store = <span class="cstat-no" title="statement not covered" >new Vuex.Stor<span class="fstat-no" title="function not covered" >e(</span>stores);</span>
-  }<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" ></span>
-  // 如果有插件则注册到Vue里面
+  // 如果store<span class="cstat-no" title="statement not covered" >s是对象，则创建Vuex.<span class="fstat-no" title="function not covered" >St</span>ore对象</span>
+  let store: Sto<span class="cstat-no" title="statement not covered" >re&lt;IAnyObject&gt;|undefined = undefined;</span>
+  if (typeof stores <span class="cstat-no" title="statement not covered" >=== 'object' &amp;&amp; Obje</span>ct.keys(stores).length &gt; 0) {
+    Vue.use(Vuex);
+    store = new Vuex.Store(stores);
+  }
+&nbsp;
+  //<span class="cstat-no" title="statement not covered" > 如果有插件则注册到Vue里面</span>
   if (Array.isArray(plugins) &amp;&amp; plugins.length &gt; 0) {
     plugins.forEach(([ pluginInstance, arg ]) =&gt; {
-      Vue.use(pluginInstance, arg);
-<span class="cstat-no" title="statement not covered" >    });</span>
+      Vue.use(pl<span class="fstat-no" title="function not covered" >ug</span>inInstance, a<span class="cstat-no" title="statement not covered" >rg);</span>
+    });
   }
-  
-  // 将小程序的初始化参数传<span class="fstat-no" title="function not covered" >递给</span>小程序<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  </span>
+  // 将小程序的初始化参数传递给小程序
   // 相同插件的初始化数据一定是相同的，所以这边使用pluginId作为key
-  let mpInitData = {
-<span class="cstat-no" title="statement not covered" >    shareMessage,</span>
-  };
+  let mpInitData = { shareMessage };
   globalData.set('mpInitData', mpInitData);
   if (getMode() === 'plugin-dev') {
     message.init(window.parent);
@@ -406,7 +406,7 @@ expo<span class="cstat-no" title="statement not covered" >rt default function Pa
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Thu Jul 23 2020 11:52:02 GMT+0800 (GMT+08:00)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Tue Aug 11 2020 11:24:30 GMT+0800 (GMT+08:00)
 </div>
 </div>
 <script src="prettify.js"></script>
