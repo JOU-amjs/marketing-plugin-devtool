@@ -14179,6 +14179,12 @@
 
     var axios$1 = axios_1;
 
+    var MP_WEIXIN = 'mpWx';
+    var MP_ALIPAY = 'mpAlipay';
+    var BROWSER = 'browser';
+    var NODE = 'node';
+
+    var _a;
     function environmentValue(envOption) {
         var href = '';
         try {
@@ -14192,26 +14198,27 @@
     }
     var host = environmentValue({
         'plugin-dev': 'http://localhost:18001',
-        prod: 'https://api.ycsh6.com',
+        prod: 'http://localhost:7001',
     });
     var javaHost = environmentValue({
         'plugin-dev': 'http://148.70.36.197:8080',
-        prod: 'http://148.70.36.197:8080',
+        prod: 'https://api.java.ycsh6.com',
     });
     var apiSign = {
         connectSymbol: '-',
         key: 'sd8mow3RPMDS0PMPmMP98AS2RG43T',
     };
-
-    var MP_WEIXIN = 'mpWx';
-    var MP_ALIPAY = 'mpAlipay';
-    var BROWSER = 'browser';
-    var NODE = 'node';
-    var MESSAGE_CODE = {
-        activity: 'activity',
-        payResult: 'pay_result',
-    };
-    var WEBVIEW_BASE_URL = 'https://mp.online.ycsh6.com/';
+    var tmplCodeMap = (_a = {},
+        _a[MP_WEIXIN] = {
+            activity: 'i5sdedogJeiICuz0dfX-FC2yBdRdkwwcxCg1okRmnys',
+            payResult: '',
+        },
+        _a[MP_ALIPAY] = {
+            activity: '',
+            payResult: '',
+        },
+        _a);
+    var viewProgramPath = 'pages/webview-container/webview-container';
 
     var gl;
     try {
@@ -14674,7 +14681,7 @@
         }
     };
 
-    function getEnvironment() {
+    function getPlatform() {
         var userAgent = '';
         try {
             userAgent = window.navigator.userAgent.toLowerCase();
@@ -14691,9 +14698,7 @@
         else if (userAgent.indexOf('node') !== -1) {
             return NODE;
         }
-        else {
-            return BROWSER;
-        }
+        return BROWSER;
     }
     function buildPath(url, params) {
         if (params === void 0) { params = {}; }
@@ -14710,7 +14715,7 @@
         return __awaiter(this, void 0, void 0, function () {
             var environment;
             return __generator(this, function (_a) {
-                environment = getEnvironment();
+                environment = getPlatform();
                 return [2, new Promise(function (resolve, reject) {
                         if (environment === MP_WEIXIN) {
                             wx.miniProgram.navigateTo({
@@ -14734,7 +14739,7 @@
         return __awaiter(this, void 0, void 0, function () {
             var environment;
             return __generator(this, function (_a) {
-                environment = getEnvironment();
+                environment = getPlatform();
                 return [2, new Promise(function (resolve, reject) {
                         if (environment === MP_WEIXIN) {
                             wx.miniProgram.navigateBack({
@@ -14755,7 +14760,7 @@
     }
     function getMode() {
         var devMode = globalData.get('devMode');
-        return (devMode === null || devMode === void 0 ? void 0 : devMode.toString()) === '1' && getEnvironment() === 'browser' ? 'plugin-dev' : 'prod';
+        return (devMode === null || devMode === void 0 ? void 0 : devMode.toString()) === '1' && getPlatform() === BROWSER ? 'plugin-dev' : 'prod';
     }
     function createApiSign(params) {
         if (params === void 0) { params = {}; }
@@ -14799,16 +14804,27 @@
         if (isEcho === void 0) { isEcho = true; }
         return (globalData.get('activityId') || '') + (globalData.get('token') || '') + (isEcho ? '-echo' : '');
     }
-    function buildWebAbsolutePath(_a) {
-        var url = _a.url, _b = _a.params, params = _b === void 0 ? {} : _b, _c = _a.routePath, routePath = _c === void 0 ? '' : _c;
-        url = url.substr(0, 1) === '/' ? url.substr(1) : url;
-        var relativePath = buildPath("/" + globalData.get('pluginId') + "/" + url + ".html/#/" + routePath, __assign({ activityId: globalData.get('activityId') || '', shopId: globalData.get('shopId') || '' }, params));
-        return WEBVIEW_BASE_URL + relativePath;
+    function getMPPath(path, routePath, query, hasBasePath) {
+        if (routePath === void 0) { routePath = ''; }
+        if (query === void 0) { query = {}; }
+        if (hasBasePath === void 0) { hasBasePath = true; }
+        return buildPath(hasBasePath ? viewProgramPath : '', {
+            activityId: globalData.get('activityId') || '',
+            pluginId: globalData.get('pluginId') || '',
+            shopId: globalData.get('shopId') || '',
+            path: path,
+            routePath: routePath,
+            query: encodeURIComponent(JSON.stringify(query || {}))
+        });
+    }
+    function formatTime(time) {
+        var fillZero = function (num) { return num >= 0 && num < 10 ? ('0' + num) : num.toString(); };
+        return time.getFullYear() + "-" + fillZero(time.getMonth() + 1) + "-" + fillZero(time.getDate()) + " " + fillZero(time.getHours()) + ":" + fillZero(time.getMinutes());
     }
 
     function interceptor (request) {
         request.interceptors.request.use(function (config) {
-            var platform = getEnvironment(), accessToken = globalData.get('accessToken') || '', timestamp = Date.parse(new Date().toString()) / 1000;
+            var platform = getPlatform(), accessToken = globalData.get('accessToken') || '', timestamp = Date.parse(new Date().toString()) / 1000;
             var method = config.method || 'get', args;
             if (/^put|post|patch|delete$/i.test(method)) {
                 args = config.data = config.data || {};
@@ -14889,11 +14905,9 @@
         },
     };
 
-    var viewProgramPath = 'pages/webview-container/webview-container';
-    function mpNavigateTo(options) {
-        return navigateTo(viewProgramPath, {
-            url: window.encodeURIComponent(buildWebAbsolutePath(options)),
-        });
+    function mpNavigateTo(_a) {
+        var path = _a.path, routePath = _a.routePath, query = _a.query;
+        return navigateTo(getMPPath(path, routePath, query));
     }
     function mpNavigateBack(delta) {
         return __awaiter(this, void 0, void 0, function () {
@@ -14906,12 +14920,9 @@
         if (!title) {
             return;
         }
-        var domTitle = document.querySelector('title');
-        if (domTitle) {
-            domTitle.innerHTML = title;
-            if (getMode() === 'plugin-dev') {
-                message.emit('titleChanged', title);
-            }
+        document.title = title;
+        if (getMode() === 'plugin-dev') {
+            message.emit('titleChanged', title);
         }
     }
     function updateShareMessage(shareOptions) {
@@ -14966,9 +14977,7 @@
                 Vue.use(pluginInstance, arg);
             });
         }
-        var mpInitData = {
-            shareMessage: shareMessage,
-        };
+        var mpInitData = { shareMessage: shareMessage };
         globalData.set('mpInitData', mpInitData);
         if (getMode() === 'plugin-dev') {
             message.init(window.parent);
@@ -15108,19 +15117,70 @@
             });
         });
     }
-    function subscribeMessage(noticeOptions) {
+    function subscribeMessage(options, tipText, btnText) {
         return __awaiter(this, void 0, void 0, function () {
-            var echoKey;
+            var messageNames, platform, platformMsgCodeMap, tmplIds, echoKey, subscribeRes, resAvailable, tmplId, optionMsgData, tmplId2NameMap, name_1, resTransform;
             return __generator(this, function (_a) {
-                echoKey = getInteractKey();
-                navigateTo(interactPage, {
-                    data: window.encodeURIComponent(JSON.stringify({
-                        intent: 'notice',
-                        echoKey: echoKey,
-                        payload: noticeOptions,
-                    })),
-                });
-                return [2, getEchoData(echoKey)];
+                switch (_a.label) {
+                    case 0:
+                        messageNames = Object.keys(options);
+                        assert$2(messageNames.length > 0, '请至少订阅一条消息');
+                        Object.keys(options).forEach(function (msgCode) {
+                            var _a = options[msgCode], timing = _a.timing, channel = _a.channel, notifyData = _a.notifyData;
+                            assert$2(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
+                            assert$2(Object.keys(notifyData).length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
+                        });
+                        platform = getPlatform();
+                        if (platform !== MP_WEIXIN && platform !== MP_ALIPAY) {
+                            throw new Error("'" + platform + "'\u5E73\u53F0\u4E0A\u4E0D\u652F\u6301\u8BA2\u9605\u6D88\u606F");
+                        }
+                        platformMsgCodeMap = tmplCodeMap[platform];
+                        tmplIds = messageNames.map(function (msgName) { return platformMsgCodeMap[msgName]; })
+                            .filter(function (tmplId) { return tmplId; });
+                        assert$2(tmplIds.length > 0, '请传入有效的消息名');
+                        echoKey = getInteractKey();
+                        navigateTo(interactPage, {
+                            data: window.encodeURIComponent(JSON.stringify({
+                                intent: 'notice',
+                                echoKey: echoKey,
+                                payload: {
+                                    tmplIds: tmplIds,
+                                    tipText: tipText,
+                                    btnText: btnText,
+                                },
+                            })),
+                        });
+                        return [4, getEchoData(echoKey)];
+                    case 1:
+                        subscribeRes = _a.sent();
+                        resAvailable = {};
+                        for (tmplId in subscribeRes) {
+                            optionMsgData = options[tmplId];
+                            if (subscribeRes[tmplId] === 'accept' && optionMsgData) {
+                                resAvailable[tmplId] = {
+                                    notifyData: optionMsgData.notifyData,
+                                    timing: optionMsgData.timing ? formatTime(optionMsgData.timing) : '',
+                                    channel: optionMsgData.channel,
+                                    path: getMPPath(optionMsgData.path, optionMsgData.routePath, optionMsgData.query ? window.encodeURIComponent(JSON.stringify(optionMsgData.query)) : '', false),
+                                };
+                            }
+                        }
+                        return [4, callServerFunction({
+                                name: 'subscribeMessage',
+                                data: resAvailable,
+                            })];
+                    case 2:
+                        _a.sent();
+                        tmplId2NameMap = {};
+                        for (name_1 in platformMsgCodeMap) {
+                            tmplId2NameMap[platformMsgCodeMap[name_1]] = name_1;
+                        }
+                        resTransform = {};
+                        Object.keys(subscribeRes).forEach(function (tmplId) {
+                            subscribeRes[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
+                        });
+                        return [2, resTransform];
+                }
             });
         });
     }
@@ -15130,11 +15190,11 @@
                 navigateTo(interactPage, {
                     data: window.encodeURIComponent(JSON.stringify({
                         intent: 'share',
-                        payload: __assign(__assign({}, shareOptions), { absolutePath: buildWebAbsolutePath({
-                                url: shareOptions.path,
-                                routePath: shareOptions.routePath,
-                                params: shareOptions.params,
-                            }) }),
+                        payload: {
+                            title: shareOptions.title,
+                            imageUrl: shareOptions.imageUrl,
+                            path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
+                        },
                     })),
                 });
                 return [2];
@@ -15287,7 +15347,7 @@
         getConfiguration: getConfiguration
     });
 
-    var _a;
+    var _a$1;
     var structKey = function (namespace, key) { return namespace + key.toString(); };
     var STORAGE_KEYS_SUFFIX = '__$$namespaced_storage_keys$$__';
     var getGlobalThisInfo = function (storageTag) {
@@ -15302,16 +15362,16 @@
     };
     var LOCAL_STORAGE = 'localStorage';
     var SESSION_STORAGE = 'sessionStorage';
-    var storages = (_a = {},
-        _a[LOCAL_STORAGE] = {
+    var storages = (_a$1 = {},
+        _a$1[LOCAL_STORAGE] = {
             globalThis: window.localStorage,
             namespace: '',
         },
-        _a[SESSION_STORAGE] = {
+        _a$1[SESSION_STORAGE] = {
             globalThis: window.sessionStorage,
             namespace: '',
         },
-        _a);
+        _a$1);
     var NamespacedStorage = (function () {
         function NamespacedStorage(namespace, storageTag) {
             storages[storageTag].namespace = namespace;
@@ -15480,7 +15540,7 @@
         });
     }
 
-    var params = parseUrlParams(window.location.href);
+    var params = parseUrlParams(window.location.search);
     var keyParams = parseKeyParams(window.location.pathname);
     globalData.set(__assign(__assign({}, params), keyParams));
     var pluginMode = getMode();
@@ -15495,7 +15555,6 @@
         });
     }
     var index$2 = __assign(__assign({ Page: Page,
-        MESSAGE_CODE: MESSAGE_CODE,
         localStorage: localStorage,
         sessionStorage: sessionStorage,
         database: database }, el), mp);

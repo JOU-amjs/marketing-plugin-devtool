@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-23 11:42:51
+ * @LastEditTime: 2020-08-10 16:57:40
  */
 import Page from './page';
 import * as el from './api/el';
@@ -9,12 +9,11 @@ import * as mp from './api/mp';
 import NamespacedStorage, {LOCAL_STORAGE, SESSION_STORAGE } from './model/namespaced-storage-factory';
 import createNamespacedDatabase from './model/namespaced-database';
 import globalData from './model/global-data';
-import { MESSAGE_CODE } from './common/constant';
 import { parseUrlParams, getMode, parseKeyParams } from './common/util';
 
 /* 初始化 */
 // 解析get参数和插件标识并存储到全局对象中
-let params = parseUrlParams(window.location.href);
+let params = parseUrlParams(window.location.search);
 let keyParams = parseKeyParams(window.location.pathname);
 globalData.set({
   ...params,
@@ -46,7 +45,6 @@ if (pluginMode === 'prod') {
 
 export default {
   Page,
-  MESSAGE_CODE,
   localStorage,
   sessionStorage,
   database,

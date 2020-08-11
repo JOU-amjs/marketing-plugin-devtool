@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 16:21:32
+ * @LastEditTime: 2020-08-10 16:59:40
  */
 
 import {
@@ -13,7 +13,7 @@ import {
   getMPPath
 } from '../common/util';
 import { IGeneralObject } from '../common/common.inter';
-import { MESSAGE_CODE, MP_WEIXIN, MP_ALIPAY } from '../common/constant';
+import { MP_WEIXIN, MP_ALIPAY } from '../common/constant';
 import { TShareMessage } from '../page';
 import callServerFunction from '../common/network/call-server-function';
 import globalData from '../model/global-data';
@@ -51,7 +51,7 @@ export async function pay(payOptions: TPayOptions) {
 }
 
 type TNoticeBased<T, U> = IGeneralObject<{
-  notifyData: IGeneralObject<{value: string}>,
+  notifyData: IGeneralObject<any>,
   timing?: T,
   channel?: string,
   path: string,
@@ -65,7 +65,7 @@ type TNoticeBased<T, U> = IGeneralObject<{
  * @return: 订阅结果的promise
  */
 export async function subscribeMessage(options: TNoticeBased<Date, number>, tipText?: string, btnText?: string,) {
-  let messageNames = Object.keys(options) as (keyof typeof MESSAGE_CODE)[];
+  let messageNames = Object.keys(options);
   assert(messageNames.length > 0, '请至少订阅一条消息');
   Object.keys(options).forEach(msgCode => {
     let { timing, channel, notifyData } = options[msgCode];
@@ -78,7 +78,8 @@ export async function subscribeMessage(options: TNoticeBased<Date, number>, tipT
   }
   
   let platformMsgCodeMap = tmplCodeMap[platform];
-  let tmplIds = messageNames.map(msgName => platformMsgCodeMap[msgName]).filter(tmplId => tmplId);
+  let tmplIds = messageNames.map(msgName => platformMsgCodeMap[msgName as keyof typeof platformMsgCodeMap])
+  .filter(tmplId => tmplId);
   assert(tmplIds.length > 0, '请传入有效的消息名');
 
   let echoKey = getInteractKey();

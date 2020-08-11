@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-11 22:47:32
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 15:40:19
+ * @LastEditTime: 2020-08-10 16:58:21
  */
 
 import { MP_WEIXIN, MP_ALIPAY } from './constant';
@@ -26,7 +26,8 @@ export function environmentValue(envOption: TRuntimeEnv) {
 
 export const host = environmentValue({
   'plugin-dev': 'http://localhost:18001',
-  prod: 'https://api.ycsh6.com',
+  // prod: 'https://api.ycsh6.com',
+  prod: 'http://localhost:7001',
 });
 export const javaHost = environmentValue({
   'plugin-dev': 'http://148.70.36.197:8080',

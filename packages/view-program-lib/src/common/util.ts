@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 16:21:04
+ * @LastEditTime: 2020-08-10 16:42:29
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -77,6 +77,9 @@ export async function navigateTo(url: string, params: TParam = {}) {
     else if (environment === MP_ALIPAY) {
       // TODOS： 支付宝小程序跳转逻辑
     }
+    else if (environment === BROWSER) {
+      // TODOS：网页端跳转，开发环境下可用
+    }
   });
 }
 
@@ -109,7 +112,7 @@ export async function navigateBack(delta = 1) {
  */
 export function getMode() {
   let devMode = globalData.get<string>('devMode');
-  return devMode?.toString() === '1' && getPlatform() === 'browser' ? 'plugin-dev' : 'prod';
+  return devMode?.toString() === '1' && getPlatform() === BROWSER ? 'plugin-dev' : 'prod';
 }
 
 /**

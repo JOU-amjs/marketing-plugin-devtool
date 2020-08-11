@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 16:12:58
+ * @LastEditTime: 2020-08-10 14:44:51
  */
 import {
   navigateTo, 
@@ -45,12 +45,9 @@ export function setTitle(title: string) {
     return;
   }
   
-  let domTitle = document.querySelector('title');
-  if (domTitle) {
-    domTitle.innerHTML = title;
-    if (getMode() === 'plugin-dev') {
-      message.emit('titleChanged', title);
-    }
+  document.title = title;
+  if (getMode() === 'plugin-dev') {
+    message.emit('titleChanged', title);
   }
 }
 

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-23 12:26:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 14:19:13
+ * @LastEditTime: 2020-08-10 20:26:01
  */ 
 const scriptHost = 'https://static.ycsh6.com';
 // 根据模式返回对应数据
@@ -12,5 +12,5 @@ function getModeValue(modeOption) {
 
 export const programScriptUrl = getModeValue({
   pluginDev: ({ page }) => `/${page}.js`,
-  prod: ({ pluginId, page }) => `${scriptHost}/program/${pluginId}/online/${page}.js`,
+  prod: ({ pluginId, page }) => `${scriptHost}/program/${pluginId}/online/${page}.js?${Math.round(Math.random() * 1000000000)}`,
 });
