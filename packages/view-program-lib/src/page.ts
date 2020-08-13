@@ -1,13 +1,13 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 16:11:24
+ * @LastEditTime: 2020-08-13 23:00:42
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
 import Vuex, { StoreOptions, Store } from 'vuex';
 import { IGeneralObject } from './common/common.inter';
-import { javaRequest } from './common/network';
+import { request, javaRequest } from './common/network';
 import globalData from './model/global-data';
 import { setTitle } from './api/mp';
 import { message } from './common/message';
@@ -44,7 +44,7 @@ interface IGlobalConfig {
 let routerHookNames: ('beforeEach'|'beforeResolve'|'afterEach')[] = ['beforeEach', 'beforeResolve', 'afterEach'];
 export default function Page (options: ComponentOptions<Vue> = {}, globalConfig: IGlobalConfig = { title: '' }) {
   if (Object.keys(options).length <= 0) {
-    return { Vue, VueRouter, Vuex };
+    return { Vue, VueRouter, Vuex, request, javaRequest };
   }
   
   // 如果routers是对象，则创建VueRouter
@@ -87,7 +87,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
     });
   }
   else {
-    javaRequest.post('/user/interact/save', {
+    request, javaRequest.post('/user/interact/save', {
       key: globalData.get<string>('pluginId'),
       value: mpInitData,
     });

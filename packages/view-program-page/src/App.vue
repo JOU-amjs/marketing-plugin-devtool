@@ -1,20 +1,28 @@
 <!--
  * @Date: 2020-06-02 15:22:39
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-23 11:29:31
+ * @LastEditTime: 2020-08-13 21:49:44
 --> 
 <template>
-  <div id="__MARKETING_AD__">
+  <div id="__MARKETING_AD__" v-if="nodeEnv === 'production'">
     <!-- <unpayed></unpayed> -->
   </div>
+  <template-index v-else />
 </template>
 
 <script>
 import Unpayed from './modules/Unpayed.vue';
+import TemplateIndex from './template/index.vue';
 
 export default {
   components: {
-    Unpayed
+    Unpayed,
+    TemplateIndex
+  },
+  computed: {
+    nodeEnv() {
+      return process.env.NODE_ENV;
+    }
   }
 };
 </script>

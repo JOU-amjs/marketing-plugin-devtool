@@ -11,7 +11,7 @@ import presetModule from './modules/index';
 // 将预设的组件注册到全局里
 Object.keys(presetComponent).forEach(name => {
   Vue.component(name, presetComponent[name]);
-}); 
+});
 // 将预设的js模块注册到vue对象上
 Object.keys(presetModule).forEach(name => {
   Vue.prototype[name] = presetModule[name];

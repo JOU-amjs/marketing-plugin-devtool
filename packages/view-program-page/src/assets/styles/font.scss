@@ -1,0 +1,41 @@
+/* 字体相关通用样式 */
+
+/* ********************************* */
+/* 页面大标题，一般用于结果、空状态等信息单一的页面 */
+$font-title-1: 34px;
+
+// 中等标题
+$font-title-2: 25px;
+
+/* 页面内大按钮字体，小标题等 */
+$font-title-3: 20px;
+
+/* 页面内首要层级信息 */
+$font-title-4: 18px;
+
+/* 页面正文内容 */
+$font-text: 16px;
+
+/* 页面内次要描述信息，服务于首要信息并与之关联 */
+$font-text-secondary: 14px;
+
+/* 页面内的辅助信息，需弱化的内容、链接或按钮 */
+$font-auxiliary: 13px;
+
+/* 说明文本，如版权等不需要关注的信息 */
+$font-explain: 11px;
+
+/* 图标大小 */
+$font-size-icon: 26px;
+$font-size-icon-mini: 20px;
+
+:export {
+  fontTitle1: $font-title-1;
+  fontTitle2: $font-title-2;
+  fontTitle3: $font-title-3;
+  fontTitle4: $font-title-4;
+  fontText: $font-text;
+  fontTextSecondary: $font-text-secondary;
+  fontAuxiliary: $font-auxiliary;
+  fontExplain: $font-explain;
+}

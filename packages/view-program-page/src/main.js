@@ -1,17 +1,23 @@
 /*
  * @Date: 2020-06-02 15:22:39
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 14:14:32
+ * @LastEditTime: 2020-08-13 21:54:22
  */ 
 import App from './App.vue';
 import Error from './Error.vue';
 import EL from 'view-program-lib';
 import { parseKeyParams } from './common/util';
 import { programScriptUrl } from './common/config';
+import * as presetComponent from './preset-components';
 
 window.EL = EL;
 const { Vue } = EL.Page();
 Vue.config.productionTip = false;
+
+// 将预设的组件注册到全局里
+Object.keys(presetComponent).forEach(name => {
+  Vue.component(name, presetComponent[name]);
+});
 
 new Vue({
   render: h => h(App)
