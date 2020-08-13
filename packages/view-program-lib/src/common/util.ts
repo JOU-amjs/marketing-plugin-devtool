@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-11 14:04:22
+ * @LastEditTime: 2020-08-13 17:30:43
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -190,14 +190,21 @@ export function getInteractKey(isEcho = true) {
  * @param {string} query 参数对象
  * @return: 构建后的路径
  */
-export function getMPPath(path: string, routePath = '', query = {}, hasBasePath = true) {
+export function getMPPath(path: string, routePath?: string, query?: IGeneralObject<any>, hasBasePath = true) {
+  let fillParams: IGeneralObject<any> = {};
+  if (routePath) {
+    fillParams.routePath = routePath;
+  }
+  if (query) {
+    fillParams.query = encodeURIComponent(JSON.stringify(query));
+  }
+
   return buildPath(hasBasePath ? viewProgramPath : '', {
     activityId: globalData.get<string>('activityId') || '',
     pluginId: globalData.get<string>('pluginId') || '',
     shopId: globalData.get<string>('shopId') || '',
     path,
-    routePath,
-    query: encodeURIComponent(JSON.stringify(query || {}))
+    ...fillParams
   });
 }
 

@@ -98,10 +98,10 @@ function environmentValue(envOption) {
 }
 var host = environmentValue({
     'plugin-dev': 'http://localhost:18001',
-    prod: 'http://localhost:7001',
+    prod: 'https://api.ycsh6.com',
 });
 var javaHost = environmentValue({
-    'plugin-dev': 'http://148.70.36.197:8080',
+    'plugin-dev': 'https://api.java.ycsh6.com',
     prod: 'https://api.java.ycsh6.com',
 });
 var apiSign = {
@@ -110,15 +110,31 @@ var apiSign = {
 };
 var tmplCodeMap = (_a = {},
     _a[MP_WEIXIN] = {
-        activity: 'i5sdedogJeiICuz0dfX-FC2yBdRdkwwcxCg1okRmnys',
-        payResult: '',
+        activity: {
+            id: 'i5sdedogJeiICuz0dfX-FC2yBdRdkwwcxCg1okRmnys',
+            dataNames: ['name3', 'name2', 'thing1', 'thing4'],
+            errorText: 'notifyData中必须包含受邀人、邀请人、活动名称、温馨提示4个数据',
+        },
+        payResult: {
+            id: 'xxxxx',
+            dataNames: ['name1'],
+            errorText: 'notifyData中必须包含名称数据',
+        },
     },
     _a[MP_ALIPAY] = {
-        activity: '',
-        payResult: '',
+        activity: {
+            id: '',
+            dataNames: [],
+            errorText: 'notifyData中必须包含受邀人、邀请人、活动名称、温馨提示4个数据',
+        },
+        payResult: {
+            id: '',
+            dataNames: [],
+            errorText: 'notifyData中必须包含受邀人、邀请人、活动名称、温馨提示4个数据',
+        },
     },
     _a);
-var viewProgramPath = 'pages/webview-container/webview-container';
+var viewProgramPath = '/pages/webview-container/webview-container';
 
 var gl;
 try {
@@ -280,21 +296,19 @@ function getInteractKey(isEcho) {
     return (globalData.get('activityId') || '') + (globalData.get('token') || '') + (isEcho ? '-echo' : '');
 }
 function getMPPath(path, routePath, query, hasBasePath) {
-    if (routePath === void 0) { routePath = ''; }
-    if (query === void 0) { query = {}; }
     if (hasBasePath === void 0) { hasBasePath = true; }
-    return buildPath(hasBasePath ? viewProgramPath : '', {
-        activityId: globalData.get('activityId') || '',
-        pluginId: globalData.get('pluginId') || '',
-        shopId: globalData.get('shopId') || '',
-        path: path,
-        routePath: routePath,
-        query: encodeURIComponent(JSON.stringify(query || {}))
-    });
+    var fillParams = {};
+    if (routePath) {
+        fillParams.routePath = routePath;
+    }
+    if (query) {
+        fillParams.query = encodeURIComponent(JSON.stringify(query));
+    }
+    return buildPath(hasBasePath ? viewProgramPath : '', __assign({ activityId: globalData.get('activityId') || '', pluginId: globalData.get('pluginId') || '', shopId: globalData.get('shopId') || '', path: path }, fillParams));
 }
 function formatTime(time) {
     var fillZero = function (num) { return num >= 0 && num < 10 ? ('0' + num) : num.toString(); };
-    return time.getFullYear() + "-" + fillZero(time.getMonth() + 1) + "-" + fillZero(time.getDate()) + " " + fillZero(time.getHours()) + ":" + fillZero(time.getMinutes());
+    return time.getFullYear() + "-" + fillZero(time.getMonth() + 1) + "-" + fillZero(time.getDate()) + " " + fillZero(time.getHours()) + ":" + fillZero(time.getMinutes()) + ":" + fillZero(time.getSeconds());
 }
 
 function interceptor (request) {
@@ -407,21 +421,13 @@ function updateShareMessage(shareOptions) {
     var newHash = buildPath(matches[1], params);
     window.history.replaceState(null, '', newHash);
 }
-function changeShopInCurrentPage(shopId) {
-    var currentShopId = globalData.get('shopId') || '';
-    if (currentShopId !== shopId) {
-        location.href = location.href.replace(/shopId=([^&]+)/, function () { return "shopId=" + shopId; });
-        location.reload();
-    }
-}
 
 var mp = /*#__PURE__*/Object.freeze({
     __proto__: null,
     mpNavigateTo: mpNavigateTo,
     mpNavigateBack: mpNavigateBack,
     setTitle: setTitle,
-    updateShareMessage: updateShareMessage,
-    changeShopInCurrentPage: changeShopInCurrentPage
+    updateShareMessage: updateShareMessage
 });
 
 var routerHookNames = ['beforeEach', 'beforeResolve', 'afterEach'];
@@ -582,7 +588,7 @@ function pay(payOptions) {
         return __generator(this, function (_a) {
             echoKey = getInteractKey();
             navigateTo(interactPage, {
-                data: window.encodeURIComponent(JSON.stringify({
+                data: encodeURIComponent(JSON.stringify({
                     intent: 'pay',
                     echoKey: echoKey,
                     payload: __assign(__assign({}, payOptions), { shopId: globalData.get('shopId') || '' }),
@@ -594,7 +600,7 @@ function pay(payOptions) {
 }
 function subscribeMessage(options, tipText, btnText) {
     return __awaiter(this, void 0, void 0, function () {
-        var messageNames, platform, platformMsgCodeMap, tmplIds, echoKey, subscribeRes, resAvailable, tmplId, optionMsgData, tmplId2NameMap, name_1, resTransform;
+        var messageNames, platform, notifyDataMap, platformMsgCodeMap, tmplIds, echoKey, subscribeRes, tmplId2NameMap, name_1, tmplCodeItem, resAvailable, tmplId, optionMsgData, resTransform;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -603,56 +609,89 @@ function subscribeMessage(options, tipText, btnText) {
                     Object.keys(options).forEach(function (msgCode) {
                         var _a = options[msgCode], timing = _a.timing, channel = _a.channel, notifyData = _a.notifyData;
                         assert(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
-                        assert(Object.keys(notifyData).length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
+                        assert(notifyData.length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
                     });
                     platform = getPlatform();
+                    if (process.env.NODE_ENV !== 'production') {
+                        platform = MP_WEIXIN;
+                    }
                     if (platform !== MP_WEIXIN && platform !== MP_ALIPAY) {
                         throw new Error("'" + platform + "'\u5E73\u53F0\u4E0A\u4E0D\u652F\u6301\u8BA2\u9605\u6D88\u606F");
                     }
+                    notifyDataMap = {};
                     platformMsgCodeMap = tmplCodeMap[platform];
-                    tmplIds = messageNames.map(function (msgName) { return platformMsgCodeMap[msgName]; })
-                        .filter(function (tmplId) { return tmplId; });
+                    tmplIds = messageNames.map(function (msgName) {
+                        var tmplCodeItem = platformMsgCodeMap[msgName];
+                        if (tmplCodeItem) {
+                            var notifyData_1 = options[msgName].notifyData || [];
+                            if (notifyData_1.length >= tmplCodeItem.dataNames.length) {
+                                var notifyDataObj_1 = {};
+                                tmplCodeItem.dataNames.forEach(function (dataName, index) { return notifyDataObj_1[dataName] = notifyData_1[index]; });
+                                notifyDataMap[tmplCodeItem.id] = notifyDataObj_1;
+                            }
+                            else {
+                                throw new Error("[\u6D88\u606F:" + msgName + "]" + tmplCodeItem.errorText);
+                            }
+                        }
+                        return tmplCodeItem.id;
+                    }).filter(function (tmplCodeItem) { return tmplCodeItem; });
                     assert(tmplIds.length > 0, '请传入有效的消息名');
                     echoKey = getInteractKey();
-                    navigateTo(interactPage, {
-                        data: window.encodeURIComponent(JSON.stringify({
-                            intent: 'notice',
-                            echoKey: echoKey,
-                            payload: {
-                                tmplIds: tmplIds,
-                                tipText: tipText,
-                                btnText: btnText,
-                            },
-                        })),
-                    });
+                    if (process.env.NODE_ENV === 'production') {
+                        navigateTo(interactPage, {
+                            data: encodeURIComponent(JSON.stringify({
+                                intent: 'notice',
+                                echoKey: echoKey,
+                                payload: {
+                                    tmplIds: tmplIds,
+                                    tipText: tipText,
+                                    btnText: btnText,
+                                },
+                            })),
+                        });
+                    }
+                    subscribeRes = {};
+                    if (!(process.env.NODE_ENV === 'production')) return [3, 2];
                     return [4, getEchoData(echoKey)];
                 case 1:
                     subscribeRes = _a.sent();
+                    return [3, 3];
+                case 2:
+                    tmplIds.forEach(function (tmplId) { return subscribeRes[tmplId] = 'accept'; });
+                    _a.label = 3;
+                case 3:
+                    tmplId2NameMap = {};
+                    for (name_1 in platformMsgCodeMap) {
+                        tmplCodeItem = platformMsgCodeMap[name_1];
+                        tmplId2NameMap[tmplCodeItem.id] = name_1;
+                    }
                     resAvailable = {};
                     for (tmplId in subscribeRes) {
-                        optionMsgData = options[tmplId];
+                        optionMsgData = options[tmplId2NameMap[tmplId]];
                         if (subscribeRes[tmplId] === 'accept' && optionMsgData) {
                             resAvailable[tmplId] = {
-                                notifyData: optionMsgData.notifyData,
+                                notifyData: notifyDataMap[tmplId],
                                 timing: optionMsgData.timing ? formatTime(optionMsgData.timing) : '',
                                 channel: optionMsgData.channel,
-                                path: getMPPath(optionMsgData.path, optionMsgData.routePath, optionMsgData.query ? window.encodeURIComponent(JSON.stringify(optionMsgData.query)) : '', false),
+                                path: getMPPath(optionMsgData.path, optionMsgData.routePath, optionMsgData.query, false),
                             };
                         }
                     }
+                    if (!(process.env.NODE_ENV === 'production')) return [3, 5];
                     return [4, callServerFunction({
                             name: 'subscribeMessage',
                             data: resAvailable,
                         })];
-                case 2:
+                case 4:
                     _a.sent();
-                    tmplId2NameMap = {};
-                    for (name_1 in platformMsgCodeMap) {
-                        tmplId2NameMap[platformMsgCodeMap[name_1]] = name_1;
-                    }
+                    return [3, 6];
+                case 5:
+                    console.log(resAvailable);
+                    _a.label = 6;
+                case 6:
                     resTransform = {};
                     Object.keys(subscribeRes).forEach(function (tmplId) {
-                        subscribeRes[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
+                        resTransform[tmplId2NameMap[tmplId] || tmplId] = subscribeRes[tmplId];
                     });
                     return [2, resTransform];
             }
@@ -677,7 +716,7 @@ function share(shareOptions) {
     });
 }
 var pageCodes = {
-    shopHomepage: 'pages/shop-homepage/shop-homepage',
+    shopHomepage: '/page-other/shop-homepage/shop-homepage',
 };
 function navigateELPage(pageCode, params) {
     if (params === void 0) { params = {}; }
@@ -686,7 +725,7 @@ function navigateELPage(pageCode, params) {
         return __generator(this, function (_a) {
             path = pageCodes[pageCode];
             assert.notNull(path, "invalid pageCode`" + pageCode + "`");
-            return [2, navigateTo(buildPath(path, params))];
+            return [2, navigateTo(path, params)];
         });
     });
 }
@@ -700,11 +739,11 @@ function getUserInfo(tips) {
                     userInfo = _a.sent();
                     if (!!userInfo) return [3, 3];
                     echoKey = getInteractKey();
-                    navigateTo(buildPath('pages/login/login', {
+                    navigateTo('/pages/login/login', {
                         tips: tips,
                         echoKey: echoKey,
                         save: 'true',
-                    }));
+                    });
                     return [4, getEchoData(echoKey)];
                 case 2:
                     userInfo = _a.sent();
@@ -717,7 +756,7 @@ function getUserInfo(tips) {
 function giveCoupon(userId, groupId) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            assert(!userId || !groupId, 'both params `userId` and `groupId` must be given');
+            assert(userId && groupId, 'both params `userId` and `groupId` must be given');
             return [2, callServerFunction({
                     name: 'giveCoupon',
                     data: { customerId: userId, groupId: groupId },
@@ -782,6 +821,7 @@ function getShopInfo() {
                     return [4, callServerFunction({ name: 'getShopInfo' })];
                 case 1:
                     shopInfo = _a.sent();
+                    shopInfo.detailedIntroStr = JSON.parse(shopInfo.detailedIntroStr || '{}');
                     globalData.set(globalShopInfoKey, shopInfo);
                     _a.label = 2;
                 case 2: return [2, shopInfo];
@@ -808,6 +848,25 @@ function getConfiguration() {
         });
     });
 }
+function notifyMessage(channel) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2, callServerFunction({
+                    name: 'notifyMessage',
+                    data: { channel: channel },
+                })];
+        });
+    });
+}
+function changeShop(shopId) {
+    shopId = shopId.trim();
+    var currentShopId = globalData.get('shopId') || '';
+    if (shopId && currentShopId !== shopId) {
+        location.href = location.href.replace(/\w+(\/\w+\/)online/, function (mat, rep) {
+            return mat.replace(rep, "/" + shopId + "/");
+        });
+    }
+}
 
 var el = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -819,7 +878,9 @@ var el = /*#__PURE__*/Object.freeze({
     giveCoupon: giveCoupon,
     getCouponInfo: getCouponInfo,
     getShopInfo: getShopInfo,
-    getConfiguration: getConfiguration
+    getConfiguration: getConfiguration,
+    notifyMessage: notifyMessage,
+    changeShop: changeShop
 });
 
 var _a$1;

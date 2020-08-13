@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-21 10:26:15
+ * @LastEditTime: 2020-08-12 09:31:36
  */ 
 const { join } = require('path');
 const cacheDir = join(__dirname, './.cache');
@@ -73,7 +73,7 @@ exports.moduleUrls = {
 };
 
 // java服务端地址
-exports.host = 'http://148.70.36.197:8080';
+exports.host = 'https://api.java.ycsh6.com';
 
 // 用于接口签名的key和分隔符，需与服务器一致
 exports.apiSign = {

@@ -1,14 +1,14 @@
 /*
  * @Date: 2020-05-29 09:30:15
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 15:20:17
+ * @LastEditTime: 2020-08-11 21:26:09
  */
 import { request } from '.';
 import { IGeneralObject, IResponse } from '../common.inter';
 import globalData from '../../model/global-data';
 
 type TViewProgrammeOptions = {
-  name: 'giveCoupon'|'getCouponInfo'|'getUserInfo'|'getShopInfo'|'getConfiguration'|'subscribeMessage'|'unifiedorder',
+  name: 'giveCoupon'|'getCouponInfo'|'getUserInfo'|'getShopInfo'|'getConfiguration'|'subscribeMessage'|'unifiedorder'|'notifyMessage',
   data?: IGeneralObject<any>,
 };
 

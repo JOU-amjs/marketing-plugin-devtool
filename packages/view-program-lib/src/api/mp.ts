@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-10 14:44:51
+ * @LastEditTime: 2020-08-13 11:03:07
  */
 import {
   navigateTo, 
@@ -11,7 +11,6 @@ import {
   getMode,
   getMPPath
 } from '../common/util';
-import globalData from '../model/global-data';
 import { message } from '../common/message';
 import { TShareMessage, TNavOptions } from '../page';
 
@@ -62,17 +61,4 @@ export function updateShareMessage(shareOptions: TShareMessage) {
   params.shareMessage = encodeURIComponent(JSON.stringify(shareOptions));
   let newHash = buildPath(matches[1], params);
   window.history.replaceState(null, '', newHash);
-}
-
-/**
- * @description: 在当前页面切换其他餐厅
- * @author: JOU(wx: huzhen555)
- * @param {string} shopId 餐厅id
- */
-export function changeShopInCurrentPage(shopId: string) {
-  let currentShopId = globalData.get<string>('shopId') || '';
-  if (currentShopId !== shopId) {
-    location.href = location.href.replace(/shopId=([^&]+)/, () => `shopId=${shopId}`);
-    location.reload();
-  }
 }
