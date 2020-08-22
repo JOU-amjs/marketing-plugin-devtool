@@ -1,8 +1,10 @@
 /*
  * @Date: 2020-06-02 15:54:23
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 22:56:59
+ * @LastEditTime: 2020-08-14 09:02:40
  */ 
+const path = require('path');
+
 module.exports = {
   lintOnSave: false,
   outputDir: '../../dist-program-views/view-program-page',

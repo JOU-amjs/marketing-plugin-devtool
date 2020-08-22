@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-07 00:14:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-02 14:24:07
+ * @LastEditTime: 2020-08-21 17:30:28
 --> 
 <template>
   <div id="container">
@@ -108,7 +108,7 @@ export default class App extends Vue {
     // 以下是在插件开发环境下添加的数值
     const activityId = 0;
     const shopId = 0;
-    return `http://localhost:18003/${this.pluginID}/${activityId}/${shopId}/online/${page}#${routePath}?${query2String(query)}`;
+    return `http://localhost:18003/${this.pluginID}/${activityId}/${shopId}/online/${page}?${query2String(query)}#${routePath}`;
   }
   @Mutation('updateState') updateState!: TMutationFn;
   

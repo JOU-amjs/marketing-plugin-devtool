@@ -853,6 +853,13 @@
     core-js "^2.6.5"
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@7.x":
+  version "7.11.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.11.2.tgz#f549c13c754cc40b87644b9fa9f09a6a95fe0736"
+  integrity sha512-TeWkU52so0mPtDcaCTxNBI/IHiz0pZgr8VEFqXFtZWpYD08ZB6FaSwVAS8MKRQAP3bYKiVjwysOJgMFY28o6Tw==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.8.4", "@babel/runtime@^7.9.6":
   version "7.10.5"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.10.5.tgz#303d8bd440ecd5a491eae6117fd3367698674c5c"
@@ -2239,6 +2246,11 @@
     lodash "^4.17.15"
     semver "^7.3.2"
     tsutils "^3.17.1"
+
+"@vant/icons@1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@vant/icons/-/icons-1.2.5.tgz#f3db43c4b300300829e3c4e909beaa33d1cbe786"
+  integrity sha512-PNVSAaAzL3LtWK16qDCtMMfM2A5v+Ie9YTMVHF4QmumpuWxjyk0iUppJ+YRD0MjwR/CTx2OWkIB57+IAqbHnlg==
 
 "@vue/babel-helper-vue-jsx-merge-props@^1.0.0":
   version "1.0.0"
@@ -14266,6 +14278,16 @@ validate-npm-package-name@^3.0.0:
   dependencies:
     builtins "^1.0.3"
 
+vant@^2.10.2:
+  version "2.10.2"
+  resolved "https://registry.yarnpkg.com/vant/-/vant-2.10.2.tgz#f792d8583315c932f4a70051c122904b9c6e5002"
+  integrity sha512-lIM50V4uzGFHfG7FlQG0KAHpIJFApnUk2jE2GhFsFfWE1ff3L9D9ZcK37sgwZMpnRFf6bhwJf3AZxs9PPdHGVg==
+  dependencies:
+    "@babel/runtime" "7.x"
+    "@vant/icons" "1.2.5"
+    "@vue/babel-helper-vue-jsx-merge-props" "^1.0.0"
+    vue-lazyload "1.2.3"
+
 vary@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
@@ -14345,6 +14367,11 @@ vue-json-pretty@^1.6.5:
   version "1.6.5"
   resolved "https://registry.yarnpkg.com/vue-json-pretty/-/vue-json-pretty-1.6.5.tgz#ceb1a46d1413528ff12e956d5f8e39aff1e08da1"
   integrity sha512-6iW3Jk4/swNG+orb4VfjfekkYF+I/UXa8rGRNque9j5r2MnrbaP8+DlGVHMqrxPcsS59eMV/SpMlB2zNBzPDww==
+
+vue-lazyload@1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/vue-lazyload/-/vue-lazyload-1.2.3.tgz#901f9ec15c7e6ca78781a2bae4a343686bdedb2c"
+  integrity sha512-DC0ZwxanbRhx79tlA3zY5OYJkH8FYp3WBAnAJbrcuoS8eye1P73rcgAZhyxFSPUluJUTelMB+i/+VkNU/qVm7g==
 
 vue-loader@^15.7.0, vue-loader@^15.9.2, vue-loader@^15.9.3:
   version "15.9.3"

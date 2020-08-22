@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-26 19:22:14
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-06-19 16:56:07
+ * @LastEditTime: 2020-08-14 16:45:20
  */
 import invoke from 'react-native-webview-invoke/browser';
 
@@ -29,12 +29,15 @@ invoke.define('_emitSubmit', async () => {
   if (submitEventCallback) {
     let postData = { code: 200, data: undefined, message: '' };
     try {
-      postData.data = await submitEventCallback();
+      let retData = await submitEventCallback();
+      if (retData === undefined || retData === false || retData === null) {
+        return;
+      }
+      postData.data = retData;
     } catch (error) {
       postData.code = 500;
       postData.message = error.message;
     }
-    
     invoke.fn.postData(postData);
   }
   // submitEventCallback.forEach(callbackItem => {

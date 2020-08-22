@@ -1,14 +1,14 @@
 {
   "name": "el-cli",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "description": "",
   "main": "src/main.js",
-  "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "upload:page": "scp -r ./dist-program-views/view-program-page root@148.70.36.197:/usr/local/plugin"
+    "upload:page": "scp -r ./dist-program-views/view-program-page root@148.70.36.197:/usr/local/plugin",
+    "upload:config": "scp -r ./dist-program-views/mp-config-view root@148.70.36.197:/usr/local/plugin"
   },
   "author": "JOU-amjs",
   "license": "MIT",

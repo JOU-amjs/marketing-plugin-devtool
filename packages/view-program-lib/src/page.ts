@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 23:00:42
+ * @LastEditTime: 2020-08-14 09:49:17
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
@@ -44,7 +44,18 @@ interface IGlobalConfig {
 let routerHookNames: ('beforeEach'|'beforeResolve'|'afterEach')[] = ['beforeEach', 'beforeResolve', 'afterEach'];
 export default function Page (options: ComponentOptions<Vue> = {}, globalConfig: IGlobalConfig = { title: '' }) {
   if (Object.keys(options).length <= 0) {
-    return { Vue, VueRouter, Vuex, request, javaRequest };
+    return { 
+      Vue, 
+      VueRouter, 
+      Vuex, 
+      request, 
+      javaRequest, 
+      config: {
+        shopId: globalData.get<string>('shopId') || '',
+        activityId: globalData.get<string>('activityId') || '',
+        pluginId: globalData.get<string>('pluginId') || '',
+      }
+    };
   }
   
   // 如果routers是对象，则创建VueRouter
@@ -87,7 +98,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
     });
   }
   else {
-    request, javaRequest.post('/user/interact/save', {
+    javaRequest.post('/user/interact/save', {
       key: globalData.get<string>('pluginId'),
       value: mpInitData,
     });

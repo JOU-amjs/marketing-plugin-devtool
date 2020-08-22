@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-11 21:13:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-21 16:09:55
+ * @LastEditTime: 2020-08-21 16:13:19
  */
 import { IGeneralObject } from '../../common/common.inter';
 import { javaRequest } from '../../common/network';
@@ -13,6 +13,7 @@ import {
   dbForbiddenCalledFns
 } from './forbidden-called-fns';
 import responseConvert from './response-convert';
+import assert from '../../common/assert';
 
 type IAnyObject = IGeneralObject<any>;
 
@@ -41,13 +42,11 @@ function createCollectionProxy(collectionName: string, activityId: string) {
   const collectionProxyedPromise = createProxyedPromise(proxyObject, {
     get(target: IAnyObject, key: string) {
       let exceptionstring = collectionForbiddenCalledFns[key];
-      if (typeof exceptionstring === 'string') {
-        throw new Error(exceptionstring);
-      }
+      assert(typeof exceptionstring !== 'string', exceptionstring);
       
       return (...args: any[]) => {
-        let convertFn = argsConverters[key as keyof typeof argsConverters] || ((val: any[]) => val);
-        target[key] = convertFn(args);
+        let convertFn = argsConverters[key as keyof typeof argsConverters] || ((val: any[], _: IAnyObject) => val);
+        target[key] = convertFn(args, target);
         return collectionProxyedPromise;
       };
     },

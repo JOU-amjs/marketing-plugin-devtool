@@ -1,12 +1,12 @@
 /*
  * @Date: 2020-07-23 12:26:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-10 20:26:01
+ * @LastEditTime: 2020-08-21 17:44:22
  */ 
 const scriptHost = 'https://static.ycsh6.com';
 // 根据模式返回对应数据
 function getModeValue(modeOption) {
-  let mode = /devMode=1/.test(window.location.hash) ? 'pluginDev' : 'prod';
+  let mode = /devMode=1/.test(window.location.href) ? 'pluginDev' : 'prod';
   return modeOption[mode] || '';
 }
 

@@ -187,8 +187,12 @@ function getPlatform() {
     }
     return BROWSER;
 }
-function buildPath(url, params) {
+function buildPath(url, params, restfulParams) {
     if (params === void 0) { params = {}; }
+    if (restfulParams === void 0) { restfulParams = {}; }
+    Object.keys(restfulParams).forEach(function (paramName) {
+        url = url.replace("{" + paramName + "}", restfulParams[paramName].toString());
+    });
     var argStr = Object.keys(params)
         .map(function (key) { return key + "=" + params[key]; })
         .join('&');
@@ -197,6 +201,21 @@ function buildPath(url, params) {
     }
     return url + argStr;
 }
+function buildViewProgramUrl(pluginId, activityId, shopId, webPagePath, routePath, query) {
+    if (routePath === void 0) { routePath = ''; }
+    if (query === void 0) { query = {}; }
+    webPagePath = webPagePath.substr(0, 1) === '/' ? webPagePath.substr(1) : webPagePath;
+    webPagePath = webPagePath ?
+        webPagePath.substr(-1) === '/' ? webPagePath : (webPagePath + '/')
+        : webPagePath;
+    var routeQuery = buildUrlParams(query);
+    return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', { accessToken: globalData.get('accessToken') || '' }, {
+        pluginId: pluginId,
+        activityId: activityId,
+        shopId: shopId,
+        webPagePath: webPagePath,
+    }) + ("#/" + (routePath + routeQuery));
+}
 function navigateTo(url, params) {
     if (params === void 0) { params = {}; }
     return __awaiter(this, void 0, void 0, function () {
@@ -204,9 +223,10 @@ function navigateTo(url, params) {
         return __generator(this, function (_a) {
             environment = getPlatform();
             return [2, new Promise(function (resolve, reject) {
+                    var urlBuilded = buildPath(url, params);
                     if (environment === MP_WEIXIN) {
                         wx.miniProgram.navigateTo({
-                            url: buildPath(url, params),
+                            url: urlBuilded,
                             success: function () {
                                 var args = [];
                                 for (var _i = 0; _i < arguments.length; _i++) {
@@ -216,6 +236,15 @@ function navigateTo(url, params) {
                             },
                             fail: function (reason) { return reject(reason); },
                         });
+                    }
+                    else if (environment === MP_ALIPAY) ;
+                    else if (environment === BROWSER) {
+                        if (!/^https?/.test(url)) {
+                            var params_1 = parseUrlParams(url);
+                            params_1.query = JSON.parse(decodeURIComponent(params_1.query || '') || '{}');
+                            url = buildViewProgramUrl(params_1.pluginId, params_1.activityId, params_1.shopId, params_1.path, params_1.routePath, params_1.query);
+                        }
+                        location.href = url;
                     }
                 })];
         });
@@ -256,6 +285,17 @@ function createApiSign(params) {
         .filter(function (item) { return item; })
         .join(apiSign.connectSymbol) + apiSign.key;
     return Md5.hashStr(rawStr);
+}
+function buildUrlParams(params, needQuestionMark) {
+    if (params === void 0) { params = {}; }
+    if (needQuestionMark === void 0) { needQuestionMark = true; }
+    var paramStr = Object.keys(params)
+        .map(function (key) { return key + "=" + params[key]; })
+        .join('&');
+    if (needQuestionMark) {
+        paramStr = (paramStr ? '?' : '') + paramStr;
+    }
+    return paramStr;
 }
 function parseUrlParams(url) {
     var params = {};
@@ -431,7 +471,18 @@ function Page(options, globalConfig) {
     if (options === void 0) { options = {}; }
     if (globalConfig === void 0) { globalConfig = { title: '' }; }
     if (Object.keys(options).length <= 0) {
-        return { Vue: Vue, VueRouter: VueRouter, Vuex: Vuex };
+        return {
+            Vue: Vue,
+            VueRouter: VueRouter,
+            Vuex: Vuex,
+            request: request,
+            javaRequest: javaRequest,
+            config: {
+                shopId: globalData.get('shopId') || '',
+                activityId: globalData.get('activityId') || '',
+                pluginId: globalData.get('pluginId') || '',
+            }
+        };
     }
     var router = undefined, routers = globalConfig.routers, stores = globalConfig.stores, plugins = globalConfig.plugins, shareMessage = globalConfig.shareMessage, title = globalConfig.title;
     if (typeof routers === 'object' && Array.isArray(routers.routes) && routers.routes.length > 0) {
@@ -578,16 +629,31 @@ function getEchoData (echoKey) {
 }
 
 var interactPage = '/pages/interact-webview-miniprogram/interact-webview-miniprogram';
+var payIntent = {
+    COUPON_PURCHASE: 'couponPurchase',
+    RECHARGE: 'recharge',
+};
 function pay(payOptions) {
     return __awaiter(this, void 0, void 0, function () {
-        var echoKey;
+        var echoKey, activityId, shopId;
         return __generator(this, function (_a) {
+            assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
+            assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
+            if (payOptions.intent === 'couponPurchase') {
+                assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
+            }
             echoKey = getInteractKey();
+            activityId = globalData.get('activityId');
+            shopId = globalData.get('shopId');
             navigateTo(interactPage, {
                 data: encodeURIComponent(JSON.stringify({
                     intent: 'pay',
                     echoKey: echoKey,
-                    payload: __assign(__assign({}, payOptions), { shopId: globalData.get('shopId') || '' }),
+                    payload: {
+                        payOptions: payOptions,
+                        activityId: activityId,
+                        shopId: shopId,
+                    },
                 })),
             });
             return [2, getEchoData(echoKey)];
@@ -866,6 +932,7 @@ function changeShop(shopId) {
 
 var el = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    payIntent: payIntent,
     pay: pay,
     subscribeMessage: subscribeMessage,
     share: share,
@@ -959,24 +1026,28 @@ var NamespacedStorage = (function () {
 }());
 
 var converterErrors = {
-    argsLength: function (length) {
-        return "function insert expected 1 arg bug got " + length;
+    argsLength: function (fnName, length) {
+        return "function " + fnName + " expected 1 arg bug got " + length;
     },
 };
 var argsConverters = {
-    insert: function (val) {
-        assert(val.length === 1, converterErrors.argsLength(val.length));
+    insert: function (val, _) {
+        assert(val.length === 1, converterErrors.argsLength('insert', val.length));
         val[0] = Array.isArray(val[0]) ? val[0] : [val[0]];
         return val;
     },
-    limit: function (val) {
-        assert(val.length === 1, converterErrors.argsLength(val.length));
+    limit: function (val, _) {
+        assert(val.length === 1, converterErrors.argsLength('limit', val.length));
         return val[0];
     },
-    skip: function (val) {
-        assert(val.length === 1, converterErrors.argsLength(val.length));
+    skip: function (val, _) {
+        assert(val.length === 1, converterErrors.argsLength('skip', val.length));
         return val[0];
-    }
+    },
+    sync: function (_, target) {
+        assert(Object.keys(target).length === 1 && target.collection, 'function sync must call after collection name');
+        return true;
+    },
 };
 
 var commonWord = function (name) { return "forbidden call function `" + name + "`"; };
@@ -1022,16 +1093,14 @@ function createCollectionProxy(collectionName, activityId) {
     var collectionProxyedPromise = createProxyedPromise(proxyObject, {
         get: function (target, key) {
             var exceptionstring = collectionForbiddenCalledFns[key];
-            if (typeof exceptionstring === 'string') {
-                throw new Error(exceptionstring);
-            }
+            assert(typeof exceptionstring !== 'string', exceptionstring);
             return function () {
                 var args = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
                     args[_i] = arguments[_i];
                 }
-                var convertFn = argsConverters[key] || (function (val) { return val; });
-                target[key] = convertFn(args);
+                var convertFn = argsConverters[key] || (function (val, _) { return val; });
+                target[key] = convertFn(args, target);
                 return collectionProxyedPromise;
             };
         },

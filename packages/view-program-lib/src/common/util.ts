@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 17:30:43
+ * @LastEditTime: 2020-08-21 16:55:48
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -45,7 +45,11 @@ type TParam = IGeneralObject<string|number>;
  * @param {object}  params 参数对象
  * @return: 拼接好的路径
  */
-export function buildPath(url: string, params: TParam = {}) {
+export function buildPath(url: string, params: TParam = {}, restfulParams: TParam = {}) {
+  Object.keys(restfulParams).forEach(paramName => {
+    url = url.replace(`{${paramName}}`, restfulParams[paramName].toString());
+  });
+  
   let argStr = Object.keys(params)
     .map(key => `${key}=${params[key]}`)
     .join('&');
@@ -58,6 +62,28 @@ export function buildPath(url: string, params: TParam = {}) {
 }
 
 /**
+ * @description: 构造在线插件url
+ *  /7asd897gasd90f/2211/113/online/index?accessToken=xxx#/second?p1=xxx&p2=xxx
+ * @author: JOU(wx: huzhen555)
+ * @param {type} 
+ * @return {type} 
+ */
+export function buildViewProgramUrl(pluginId: string, activityId: string, shopId: string, webPagePath: string, routePath = '', query = {}) {
+  // 将webPagePath 格式化成`{webPagePath}/`，当webPagePath为空时末尾不加`/`
+  webPagePath = webPagePath.substr(0, 1) === '/' ? webPagePath.substr(1) : webPagePath;
+  webPagePath = webPagePath ? 
+    webPagePath.substr(-1) === '/' ? webPagePath : (webPagePath + '/')
+    : webPagePath;
+  let routeQuery = buildUrlParams(query);
+  return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', { accessToken: globalData.get<string>('accessToken') || '' }, {
+    pluginId,
+    activityId,
+    shopId,
+    webPagePath,
+  }) + `#/${routePath + routeQuery}`;
+}
+
+/**
  * @description: 小程序页面跳转
  * @author: JOU(wx: huzhen555)
  * @param {string} url 小程序路径
@@ -67,9 +93,10 @@ export function buildPath(url: string, params: TParam = {}) {
 export async function navigateTo(url: string, params: TParam = {}) {
   let environment = getPlatform();
   return new Promise<any>((resolve, reject) => {
+    let urlBuilded = buildPath(url, params);
     if (environment === MP_WEIXIN) {
       wx.miniProgram.navigateTo({
-        url: buildPath(url, params),
+        url: urlBuilded,
         success: (...args: any[]) => resolve(args),
         fail: (reason: string) => reject(reason),
       });
@@ -78,7 +105,14 @@ export async function navigateTo(url: string, params: TParam = {}) {
       // TODOS： 支付宝小程序跳转逻辑
     }
     else if (environment === BROWSER) {
-      // TODOS：网页端跳转，开发环境下可用
+      // 网页端跳转，开发环境下可用
+      // 以http或https开头的直接重定向，其他则抛出跳转提示
+      if (!/^https?/.test(url)) {
+        let params = parseUrlParams(url);
+        params.query = JSON.parse(decodeURIComponent(params.query || '') || '{}');
+        url = buildViewProgramUrl(params.pluginId, params.activityId, params.shopId, params.path, params.routePath, params.query);
+      }
+      location.href = url;
     }
   });
 }
@@ -127,6 +161,22 @@ export function createApiSign(params: IGeneralObject<string> = {}) {
   .filter(item => item)
   .join(apiSign.connectSymbol) + apiSign.key;
   return Md5.hashStr(rawStr) as string;
+}
+
+/**
+ * @description: 构建url中的参数
+ * @author: JOU(wx: huzhen555)
+ * @param {object} params 待构建的参数对象
+ * @return: 构建后的参数字符串
+ */
+export function buildUrlParams(params: IGeneralObject<any> = {}, needQuestionMark = true) {
+  let paramStr = Object.keys(params)
+  .map((key) => `${key}=${params[key]}`)
+  .join('&');
+  if (needQuestionMark) {
+    paramStr = (paramStr ? '?' : '') + paramStr;  // 如果有参数则需要在开头加一个`?`
+  }
+  return paramStr;
 }
 
 /**

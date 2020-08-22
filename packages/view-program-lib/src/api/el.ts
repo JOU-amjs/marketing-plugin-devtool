@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 17:25:09
+ * @LastEditTime: 2020-08-20 18:01:53
  */
 
 import {
@@ -22,7 +22,7 @@ import { tmplCodeMap } from '../common/config';
 
 const interactPage = '/pages/interact-webview-miniprogram/interact-webview-miniprogram';
 type TPayOptions = {
-  intent: 'purchaseCoupon'|'recharge',   // purchaseCoupon为购买券，recharge为预充值
+  intent: 'couponPurchase'|'recharge',   // purchaseCoupon为购买券，recharge为预充值
   couponGroupId?: string,
   amount: number,
   clientParams?: IGeneralObject<any>,   // 客户端参数，该参数可在服务端代码处理时原样获取
@@ -34,15 +34,28 @@ type TPayOptions = {
  * @param {object} payOptions
  * @return: 支付结果的promise
  */
+export const payIntent = {
+  COUPON_PURCHASE: 'couponPurchase',
+  RECHARGE: 'recharge',
+};
 export async function pay(payOptions: TPayOptions) {
+  assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
+  assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
+  if (payOptions.intent === 'couponPurchase') {
+    assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
+  }
+  
   let echoKey = getInteractKey();
+  let activityId = globalData.get<string>('activityId');
+  let shopId = globalData.get<string>('shopId');
   navigateTo(interactPage, {
     data: encodeURIComponent(JSON.stringify({
       intent: 'pay',
       echoKey,
       payload: {
-        ...payOptions,
-        shopId: globalData.get<string>('shopId') || '',
+        payOptions,
+        activityId,
+        shopId,
       },
     })),
   });
