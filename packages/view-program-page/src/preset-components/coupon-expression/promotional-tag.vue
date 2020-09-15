@@ -1,10 +1,10 @@
 <!--
  * @Date: 2020-08-14 13:25:11
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 13:25:29
+ * @LastEditTime: 2020-08-24 15:22:57
 -->
 <template>
-  <text class="promotional-tag" :style="textColor">{{ text }}</text>
+  <span class="promotional-tag" :style="textColor">{{ text }}</span>
 </template>
 
 <script>
@@ -30,10 +30,10 @@ export default {
 <style lang="scss" scoped>
 .promotional-tag {
   border-style: solid;
-  border-width: 1upx;
-  font-size: 16upx;
-  padding: 2upx 6upx;
-  border-radius: 20upx;
+  border-width: 1px;
+  font-size: 10px;
+  padding: 0px 3px;
+  border-radius: 20px;
   display: flex;
 }
 </style>

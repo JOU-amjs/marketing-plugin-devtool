@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-21 16:55:48
+ * @LastEditTime: 2020-08-25 10:30:18
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -137,16 +137,6 @@ export async function navigateBack(delta = 1) {
       // TODOS： 支付宝小程序回退逻辑
     }
   });
-}
-
-/**
- * @description: 获取模式，意思是在正式环境下运行的，还是在插件开发环境下运行的
- * @author: JOU(wx: huzhen555)
- * @return {string} 正式环境下运行返回`prod`，插件开发环境下运行返回`plugin-dev`;
- */
-export function getMode() {
-  let devMode = globalData.get<string>('devMode');
-  return devMode?.toString() === '1' && getPlatform() === BROWSER ? 'plugin-dev' : 'prod';
 }
 
 /**

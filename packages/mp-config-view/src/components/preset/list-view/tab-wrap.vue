@@ -1,7 +1,7 @@
 <!--
  * @Date: 2019-08-27 08:48:59
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-05 14:51:43
+ * @LastEditTime: 2020-09-15 20:10:35
  -->
 <template>
   <div class="container">
@@ -112,7 +112,7 @@ export default {
      * @author: JOU(wx: huzhen555)
      * @param {string} label 标签名
      * @param {string} name  唯一名称
-     * @return: 
+     * @return: void
      */
     updateTabs(label, name) {
       let index = findTabsIndex(this.tabs, name);
@@ -126,7 +126,7 @@ export default {
      * @author: JOU(wx: huzhen555)
      * @param {string} name  唯一名称
      * @param {number} index 切换的下标
-     * @return: 
+     * @return: void
      */
     toggleTab(name, index) {
       this.selectedIndex = index;

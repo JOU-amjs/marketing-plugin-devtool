@@ -1,0 +1,23 @@
+{
+  "id": "2023936",
+  "name": "view-program-page",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "营销插件页面图标库",
+  "glyphs": [
+    {
+      "icon_id": "356447",
+      "name": "进入",
+      "font_class": "jinru",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "8450497",
+      "name": "辣椒",
+      "font_class": "lajiao",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    }
+  ]
+}

@@ -84,8 +84,7 @@ var MP_ALIPAY = 'mpAlipay';
 var BROWSER = 'browser';
 var NODE = 'node';
 
-var _a;
-function environmentValue(envOption) {
+function getMode() {
     var href = '';
     try {
         href = window.location.href;
@@ -93,16 +92,29 @@ function environmentValue(envOption) {
     catch (error) {
         href = '';
     }
-    var pluginMode = /devMode=1/.test(href) ? 'plugin-dev' : 'prod';
-    return envOption[pluginMode] || '';
+    if (/devMode=1/.test(href)) {
+        return 'plugin-dev';
+    }
+    else if (/devMode=2/.test(href)) {
+        return 'debug';
+    }
+    return 'prod';
+}
+
+var _a;
+function environmentValue(envOption) {
+    var mode = getMode();
+    return envOption[mode] || '';
 }
 var host = environmentValue({
     'plugin-dev': 'http://localhost:18001',
     prod: 'https://api.ycsh6.com',
+    debug: 'http://localhost:7001',
 });
 var javaHost = environmentValue({
     'plugin-dev': 'https://api.java.ycsh6.com',
     prod: 'https://api.java.ycsh6.com',
+    debug: 'https://api.java.ycsh6.com',
 });
 var apiSign = {
     connectSymbol: '-',
@@ -277,10 +289,6 @@ function navigateBack(delta) {
                 })];
         });
     });
-}
-function getMode() {
-    var devMode = globalData.get('devMode');
-    return (devMode === null || devMode === void 0 ? void 0 : devMode.toString()) === '1' && getPlatform() === BROWSER ? 'plugin-dev' : 'prod';
 }
 function createApiSign(params) {
     if (params === void 0) { params = {}; }
@@ -549,20 +557,28 @@ function Page(options, globalConfig) {
 
 function callServerFunction (options) {
     return __awaiter(this, void 0, void 0, function () {
-        var activityId, shopId, data;
+        var activityId, shopId, data, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     activityId = globalData.get('activityId');
                     shopId = globalData.get('shopId');
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
                     return [4, request.post('/v1/call_viewprogramme_function', __assign({ activityId: activityId,
                             shopId: shopId }, options))];
-                case 1:
+                case 2:
                     data = (_a.sent()).data;
                     if (data.code !== 200) {
-                        throw new Error("[ViewProgramServerError]" + data.msg);
+                        throw new Error(data.msg);
                     }
                     return [2, data.data];
+                case 3:
+                    error_1 = _a.sent();
+                    error_1.message = "[ViewProgramServerError]" + error_1.message;
+                    throw error_1;
+                case 4: return [2];
             }
         });
     });
@@ -819,10 +835,10 @@ function getUserInfo(tips) {
         });
     });
 }
-function giveCoupon(userId, groupId) {
+function giveCoupon(groupId, userId) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            assert(userId && groupId, 'both params `userId` and `groupId` must be given');
+            assert(groupId, 'param `groupId` must be given');
             return [2, callServerFunction({
                     name: 'giveCoupon',
                     data: { customerId: userId, groupId: groupId },
@@ -832,7 +848,7 @@ function giveCoupon(userId, groupId) {
 }
 function getCouponInfo(groupId) {
     return __awaiter(this, void 0, void 0, function () {
-        var globalCouponKey, couponInfoMap, groupIds, couponRes, requestGroupIds, i, idItem, couponInfo, couponInfos, keys;
+        var globalCouponKey, couponInfoMap, groupIds, couponRes, requestGroupIds, i, idItem, couponInfo, couponInfos_1, currentMilTs_1, keys;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -858,9 +874,22 @@ function getCouponInfo(groupId) {
                             data: { groupId: requestGroupIds },
                         })];
                 case 1:
-                    couponInfos = _a.sent();
-                    couponInfos.forEach(function (couponInfo) {
-                        couponRes[couponInfo.id] = couponInfoMap[couponInfo.id] = couponInfo;
+                    couponInfos_1 = _a.sent();
+                    currentMilTs_1 = Date.now();
+                    requestGroupIds.forEach(function (groupId) {
+                        var couponInfo = couponInfos_1.find(function (_a) {
+                            var id = _a.id;
+                            return id === groupId;
+                        });
+                        if (couponInfo) {
+                            couponInfo.expireTime = new Date(couponInfo.expireTime * 1000);
+                            couponInfo.status = couponInfo.expireTime.getTime() < currentMilTs_1 ? 0 : couponInfo.status;
+                            if (typeof couponInfo.useLimit === 'string') {
+                                couponInfo.useLimit = JSON.parse(couponInfo.useLimit || '[]');
+                            }
+                            couponInfoMap[couponInfo.id] = couponInfo;
+                        }
+                        couponRes[groupId] = couponInfo;
                     });
                     _a.label = 2;
                 case 2:
@@ -870,6 +899,58 @@ function getCouponInfo(groupId) {
                     else {
                         keys = Object.keys(couponRes);
                         return [2, keys.length > 0 ? couponRes[keys[0]] : null];
+                    }
+            }
+        });
+    });
+}
+function getDishInfo(dishId) {
+    return __awaiter(this, void 0, void 0, function () {
+        var globalDishesKey, dishesInfoMap, dishIds, dishesRes, requestDishIds, i, idItem, dishInfo, dishInfos_1, keys;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
+                    globalDishesKey = 'dishesInfo';
+                    dishesInfoMap = globalData.get(globalDishesKey) || {};
+                    dishIds = Array.isArray(dishId) ? dishId : [dishId];
+                    dishesRes = {};
+                    requestDishIds = [];
+                    for (i in dishIds) {
+                        idItem = dishIds[i];
+                        dishInfo = dishesInfoMap[idItem];
+                        if (!dishInfo) {
+                            requestDishIds.push(idItem);
+                        }
+                        else {
+                            dishesRes[dishInfo.id] = dishInfo;
+                        }
+                    }
+                    if (!(requestDishIds.length > 0)) return [3, 2];
+                    return [4, callServerFunction({
+                            name: 'getDishInfo',
+                            data: { dishId: requestDishIds },
+                        })];
+                case 1:
+                    dishInfos_1 = _a.sent();
+                    requestDishIds.forEach(function (dishId) {
+                        var couponInfo = dishInfos_1.find(function (_a) {
+                            var id = _a.id;
+                            return id === dishId;
+                        });
+                        if (couponInfo) {
+                            dishesInfoMap[couponInfo.id] = couponInfo;
+                        }
+                        dishesRes[dishId] = couponInfo;
+                    });
+                    _a.label = 2;
+                case 2:
+                    if (Array.isArray(dishId)) {
+                        return [2, dishesRes];
+                    }
+                    else {
+                        keys = Object.keys(dishesRes);
+                        return [2, keys.length > 0 ? dishesRes[keys[0]] : null];
                     }
             }
         });
@@ -887,7 +968,6 @@ function getShopInfo() {
                     return [4, callServerFunction({ name: 'getShopInfo' })];
                 case 1:
                     shopInfo = _a.sent();
-                    shopInfo.detailedIntroStr = JSON.parse(shopInfo.detailedIntroStr || '{}');
                     globalData.set(globalShopInfoKey, shopInfo);
                     _a.label = 2;
                 case 2: return [2, shopInfo];
@@ -925,7 +1005,7 @@ function notifyMessage(channel) {
     });
 }
 function changeShop(shopId) {
-    shopId = shopId.trim();
+    shopId = shopId.toString().trim();
     var currentShopId = globalData.get('shopId') || '';
     if (shopId && currentShopId !== shopId) {
         location.href = location.href.replace(/\w+(\/\w+\/)online/, function (mat, rep) {
@@ -944,6 +1024,7 @@ var el = /*#__PURE__*/Object.freeze({
     getUserInfo: getUserInfo,
     giveCoupon: giveCoupon,
     getCouponInfo: getCouponInfo,
+    getDishInfo: getDishInfo,
     getShopInfo: getShopInfo,
     getConfiguration: getConfiguration,
     notifyMessage: notifyMessage,
@@ -1155,16 +1236,14 @@ var pluginMode = getMode();
 if (!keyParams.activityId || !keyParams.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }
-var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace), warnGetter = function (storageTag) { return function () { return console.warn("please use `EL." + storageTag + "` with the same usage."); }; };
+var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace);
 if (pluginMode === 'prod') {
     Object.defineProperties(window, {
-        localStorage: { get: warnGetter('localStorage') },
-        sessionStorage: { get: warnGetter('sessionStorage') },
+        localStorage: { value: localStorage },
+        sessionStorage: { value: sessionStorage },
     });
 }
 var index = __assign(__assign({ Page: Page,
-    localStorage: localStorage,
-    sessionStorage: sessionStorage,
     database: database }, el), mp);
 
 module.exports = index;

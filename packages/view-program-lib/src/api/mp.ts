@@ -1,18 +1,18 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 11:03:07
+ * @LastEditTime: 2020-09-15 12:58:44
  */
 import {
   navigateTo, 
   navigateBack, 
   parseUrlParams,
   buildPath,
-  getMode,
   getMPPath
 } from '../common/util';
 import { message } from '../common/message';
 import { TShareMessage, TNavOptions } from '../page';
+import getMode from '../common/get-mode';
 
 
 /**
@@ -28,9 +28,8 @@ export function mpNavigateTo({ path, routePath, query }: TNavOptions) {
  * @description: 基于小程序的页面返回
  * @author: JOU(wx: huzhen555)
  * @param {number} delta 返回页数 
- * @return: 
  */
-export async function mpNavigateBack(delta: number) {
+export async function mpNavigateBack(delta?: number) {
   return navigateBack(delta);
 }
 

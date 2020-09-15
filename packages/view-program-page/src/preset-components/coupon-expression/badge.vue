@@ -1,7 +1,7 @@
 <template>
-	<view :class="wrapCls" :style="wrapStyle">
-		<text class="badge-text" :style="textStyle">{{ text }}</text>
-	</view>
+	<div :class="wrapCls" :style="wrapStyle">
+		<span class="badge-text" :style="textStyle">{{ text }}</span>
+	</div>
 </template>
 
 <script>
@@ -81,27 +81,27 @@ export default {
 <style lang="scss" scoped>
 .badge-wrap {
   display: flex;
-  min-width: 32upx;
-  height: 32upx;
+  min-width: 18px;
+  height: 18px;
   justify-content: center;
   align-items: center;
 }
 .badge-padding {
-  padding: 0 8upx;
+  padding: 0 8px;
 }
 .badge-ellipse {
-  border-radius: 32upx;
+  border-radius: 32px;
 }
 .badge-triangle {
-  border-radius: 8upx;
-  border-bottom-right-radius: 32upx;
+  border-radius: 8px;
+  border-bottom-right-radius: 32px;
 }
 .badge-wrap-border {
   border-style: solid;
-  border-width: 0.5upx;
+  border-width: 0.5px;
 }
 .badge-text {
-  font-size: 18upx;
-  line-height: 18upx;
+  font-size: 12px;
+  line-height: 12px;
 }
 </style>

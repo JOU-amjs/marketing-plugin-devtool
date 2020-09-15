@@ -1,7 +1,7 @@
 <!--
  * @Date: 2019-08-29 17:36:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-05 18:17:52
+ * @LastEditTime: 2020-08-24 20:07:24
  -->
 <template>
   <div class="view-item-wrap tap-highlight flex-row border-top" 
@@ -12,17 +12,17 @@
       <span class="label">{{ label }}</span>
       <span class="sub-label" v-if="subLabel">{{ subLabel }}</span>
     </div>
-    <div class="flex-row align-center" v-if="type === 'text' || type === 'dish' || type === 'category'">
+    <div class="flex-row align-center" v-if="arrowType">
       <div class="clip-icon-wrap" v-if="imageUrl">
         <img class="clip-icon" :src="imageUrl" />
       </div>
       <span class="text" :style="{ color: value ? '#333' : '#999' }">{{
-        (type === 'dish' || type === 'category' ? aliasName : value) || placeholder
+        (type === 'dish' || type === 'category' || type === 'coupon' ? aliasName : value) || placeholder
       }}</span>
       <span class="iconfont">&#xe8c3;</span>
     </div>
     <input class="val-input" :type="inputType" 
-      v-else-if="type === 'input' || type === 'input-number'" 
+      v-else 
       :placeholder="placeholder || '请输入内容'" 
       v-model="inputVal"
     />
@@ -39,7 +39,7 @@ export default {
     },
     subLabel: String,
     type: {
-      validator: val => /^text|input|input-number|dish|category$/.test(val),
+      validator: val => /^text|input|input-number|dish|category|coupon$/.test(val),
       type: String,
       default: 'text',
     },
@@ -70,15 +70,14 @@ export default {
   },
   computed: {
     inputType() {
-      let type = '';
-      if (this.type === 'input') {
-        type = 'text';
-      }
-      else if (this.type === 'input-number') {
-        type = 'number';
-      }
-      
-      return type;
+      return ({
+        input: 'text',
+        'input-number': 'number',
+      })[this.type];
+    },
+    arrowType() {
+      let type = this.type;
+      return type === 'text' || type === 'dish' || type === 'category' || type === 'coupon';
     }
   },
   created() {
@@ -86,13 +85,13 @@ export default {
   },
   methods: {
     textClickHandler(e) {
-      if (this.type !== 'input' || this.type !== 'input-number') {
+      if (this.arrowType) {
         this.$emit('tap', e);
       }
     },
     requestDescData() {
       // 通过代理统一请求数据，再分发到各个view-item对象中
-      if (/^dish|category$/.test(this.type) && this.value) {
+      if (/^dish|category|coupon$/.test(this.type) && this.value) {
         proxyRequestData(this.type, this.value, resData => {
           if (resData.length > 0) {
             if (this.type === 'dish') {
@@ -102,6 +101,9 @@ export default {
             else if (this.type === 'category') {
               this.aliasName = resData[0].name + (resData.length > 1 ? `等${resData.length}个` : '');
               this.imageUrl = resData[0].icon;
+            }
+            else if (this.type === 'coupon') {
+              this.aliasName = resData[0].name + (resData.length > 1 ? `等${resData.length}个` : '');
             }
           }
           else {

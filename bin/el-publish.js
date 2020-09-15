@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:38
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-05 12:44:13
+ * @LastEditTime: 2020-08-27 18:02:21
  */ 
 const commander = require('commander');
 const chalk = require('chalk');
@@ -19,12 +19,18 @@ const {
   statSync,
   createReadStream,
   existsSync,
-  mkdirSync
+  mkdirSync,
+  readFileSync,
+  writeFileSync
 } = require('fs');
 const path = require('path');
-const { getPluginType } = require('../common/util');
+const { getPluginType, createHashCode } = require('../common/util');
 const javaRequest = require('../common/java-request');
 const dataAssert = require('../common/common-assert');
+const {
+  hashName, 
+  renameFilepath
+} = require('../common/bin-modules/el-publish/helper');
 
 commander
   .name('el')
@@ -71,17 +77,15 @@ try {
 // 编译打包
 (async () => {
   try {
+    const hash = createHashCode(Date.now().toString());   // 随机hash
     // 根据插件类型打包不同部分
     const builder = [];
     const configViewBuildFn = pluginConfig.hasConfigView ? () => configViewServer.build() : () => Promise.resolve();
     if (pluginType === 1) {
       if (!pluginConfig.onlinePages || pluginConfig.onlinePages.length <= 0) {
-        spinner.fail(chalk.redBright('😣发布失败，未在plugin.json中找到onlinePages数组'));
-        process.exit(1);
+        throw new Error('😣发布失败，未在plugin.json中找到onlinePages数组');
       }
-      else {
-        builder.push(configViewBuildFn(), onlineServer.build());
-      }
+      builder.push(configViewBuildFn(), onlineServer.build());
     }
     else if (pluginType === 2) {
       builder.push(configViewBuildFn(), offlineServer.build());
@@ -94,7 +98,8 @@ try {
       // 拷贝静态资源到目标目录(先判断是否存在)
       existsSync(paths.assets()) ? cpy('**/*', paths.distDirectory.assets, {
         parents: true,
-        cwd: paths.assets()
+        cwd: paths.assets(),
+        rename: filename => hashName(filename, hash),     // 静态资源增加随机hash值
       }) : Promise.resolve(),
 
       // 拷贝服务端代码文件夹到目标目录(先判断是否存在)
@@ -111,15 +116,19 @@ try {
       // 拷贝plugin.json到目标目录
       cpy(paths.pluginFile(), paths.distDirectory.root),
     ]);
-    spinner.succeed(chalk.green('🤗编译成功。'));
+
+    // 将资源地址编译成有hash码的地址
+    let distPluginFile = paths.distDirectory.pluginFile;
+    const pluginJsonContent = readFileSync(distPluginFile, { encoding: 'utf-8' }).toString();
+    writeFileSync(distPluginFile, renameFilepath(pluginJsonContent, hash), 'utf-8');
     
+    spinner.succeed(chalk.green('🤗编译成功。'));
     // 压缩编译后的文件
     let filepaths = readdirSync(paths.distDirectory.root);
     if (filepaths.length <= 0) {
-      spinner.fail('😣发布失败，未找到编译文件');
-      return;
+      throw new Error('未找到编译文件');
     }
-
+    
     spinner = ora(chalk.dim('正在处理编译文件...')).start();
     // 如果没有缓存目录则先创建
     if (!existsSync(paths.cacheDirectory)) {

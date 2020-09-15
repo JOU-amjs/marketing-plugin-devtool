@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-16 10:34:27
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-21 10:41:54
+ * @LastEditTime: 2020-08-27 17:26:11
  */ 
 const { paths } = require("../../../config");
 const fs = require('fs');
@@ -91,7 +91,7 @@ module.exports = async function(type, options = {}) {
   });
   if (options.dirname) {
     options.pluginID = options.dirname
-      .replace(/[_-](\w)/g, (_, letter) => letter.toUpperCase())  // 下划线或中划线转大写
+      .replace(/[_-](\w)/g, (_, letter) => letter.toUpperCase())  // 插件目录名将下划线或中划线转大写
       .replace(/\w/, match => match.toUpperCase());   // 首字母大写
   }
   fileContents = await renders[type](options, renderFilePaths, fileContents);

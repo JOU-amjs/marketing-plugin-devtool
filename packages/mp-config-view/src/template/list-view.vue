@@ -1,7 +1,7 @@
 <!--
  * @Date: 2019-08-27 16:11:43
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-06 12:41:49
+ * @LastEditTime: 2020-08-24 20:48:24
  -->
 <template>
   <div class="component">
@@ -22,6 +22,7 @@
         <view-item label="选项2" sub-label="解释语2解释语2解释语2解释语2解释语2" placeholder="请选择" value="选项值2"></view-item>
         <view-item label="选项3" type="category" placeholder="请选择" :value="catIds" @tap="selectCats"></view-item>
         <view-item label="选项4" placeholder="请选择" :value="dateVal" @tap="selectNativeDate"></view-item>
+        <view-item label="选项5" placeholder="请选择优惠券" type="coupon" :value="couponId" @tap="selectCoupon"></view-item>
       </list-view>
     </div>
   </div>
@@ -41,6 +42,7 @@ export default {
       dishIds: [6,7],
       catIds: [3],
       dateVal: '',
+      couponId: '1',
     };
   },
   methods: {
@@ -73,6 +75,10 @@ export default {
         endDate: '2019-12-20'
       } });
       this.dateVal = dates;
+    },
+    async selectCoupon() {
+      const couponData = await this.selectCoupons();
+      this.couponId = couponData.groupId;
     }
   },
   mounted() {

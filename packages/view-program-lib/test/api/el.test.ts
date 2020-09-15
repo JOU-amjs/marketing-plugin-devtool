@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-08-11 10:40:50
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-20 16:54:29
+ * @LastEditTime: 2020-08-24 14:54:59
  */
 import * as EL from '../../src/api/el';
 var expect = require('expect.js');
@@ -43,4 +43,16 @@ describe('测试el api函数', function () {
       expect(subRes).to.eql({ activity: 'accept', payResult: 'accept' });
     });
   });
+
+  // describe('EL.getDishInfo', () => {
+  //   it('不是套餐时没有suitsDishes', async () => {
+  //     await EL.getDishInfo('1');
+      
+  //   });
+
+  //   it('套餐时有suitsDishes', async () => {
+  //     // let dishInfo = await EL.getDishInfo('9');
+  //     // console.log(dishInfo);
+  //   });
+  // });
 });

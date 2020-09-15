@@ -1,10 +1,14 @@
 /*
  * @Date: 2019-08-27 14:09:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-05 17:18:14
+ * @LastEditTime: 2020-08-24 20:45:08
  */
 
-import { getShopDishes, getShopDishCategories } from "../../common/request";
+import {
+  getShopDishes,
+  getShopDishCategories,
+  getCoupons
+} from "../../common/request";
 
 function _navigate(page, payload) {
   return new Promise(async resolve => {
@@ -54,6 +58,22 @@ function _navigate(page, payload) {
         res = '2019-12-10';
       }
     }
+    else if (page === 'coupons') {
+      let { data } = await getCoupons();
+      data = Object.values(data);
+      if (payload.multiple) {
+        const resObj = {};
+        for (let i = 0; i < 2; i++) {
+          let random = Math.floor(Math.random() * data.length);
+          resObj[random] = data[random];
+        }
+        res = Object.values(resObj);
+      }
+      else {
+        let random = Math.floor(Math.random() * data.length);
+        res = data[random];
+      }
+    }
     resolve(res);
   });
 }
@@ -81,8 +101,8 @@ export default {
    * @description: 跳转到native选择优惠券组页，并异步返回优惠券组数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据
    */
-  selectCoupons() {
-    return _navigate('coupons');
+  selectCoupons(params = {}) {
+    return _navigate('coupons', params);
   },
 
   /**

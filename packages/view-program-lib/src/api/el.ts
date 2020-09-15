@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-20 18:01:53
+ * @LastEditTime: 2020-09-15 12:36:51
  */
 
 import {
@@ -76,7 +76,7 @@ type TNoticeBased<T, U, O> = IGeneralObject<{
  * @param {array} tmplCodes 模板code数组
  * @return: 订阅结果的promise
  */
-export async function subscribeMessage(options: TNoticeBased<(string|number)[], Date, number>, tipText?: string, btnText?: string,) {
+export async function subscribeMessage(options: TNoticeBased<(string|number)[], Date, number>, tipText?: string, btnText?: string) {
   let messageNames = Object.keys(options);
   assert(messageNames.length > 0, '请至少订阅一条消息');
   // 检查参数
@@ -228,7 +228,7 @@ export async function getUserInfo(tips: string) {
     nickname: string,
     province: string,
     city: string,
-    gender: 0|1,
+    gender: 0|1|2,  //性别 0：未知、1：男、2：女
   };
   
   let userInfo = await callServerFunction<TUserInfo>({ name: 'getUserInfo' });
@@ -247,12 +247,12 @@ export async function getUserInfo(tips: string) {
 /**
  * @description: 发放优惠券
  * @author: JOU(wx: huzhen555)
- * @param {string} userId  用户id
  * @param {string} groupId 发放的优惠券组id
+ * @param {string} userId  用户id，如果此参数为空则发放给当前用户
  * @return: 包含发放结果的promise
  */
-export async function giveCoupon(userId: string, groupId: string) {
-  assert(userId && groupId, 'both params `userId` and `groupId` must be given');
+export async function giveCoupon(groupId: string, userId?: string) {
+  assert(groupId, 'param `groupId` must be given');
   type TCouponRes = {
     success: boolean,
     couponId: string,
@@ -268,19 +268,22 @@ export async function giveCoupon(userId: string, groupId: string) {
 }
 
 /**
- * @description: 传入couponGroupId返回对应优惠券组的信息
+ * @description: 根据id获取对应优惠券组的信息
  * @author: JOU(wx: huzhen555)
- * @param {string}  groupId 优惠券组id
+ * @param {string|string[]}  groupId 优惠券组id
  * @return: 对应优惠券组id的信息
  */
 export async function getCouponInfo(groupId: string|string[]) {
   type TCouponInfo = {
     id: string,
     name: string;
-    createTimestamp: number;
-    couponData: string;
-    useLimit: string;
-    useDays: number;
+    expireTime: number|Date;
+    couponStr: string;
+    couponData: IGeneralObject<string>,
+    useLimit: IGeneralObject<string>[]|string;
+    useLimitStrArray: string[],
+    useDays: number,
+    status: number,
   };
   
   // 断言参数
@@ -288,7 +291,7 @@ export async function getCouponInfo(groupId: string|string[]) {
   let globalCouponKey = 'couponInfo';
   let couponInfoMap = globalData.get<IGeneralObject<TCouponInfo>>(globalCouponKey) || {};
   let groupIds = Array.isArray(groupId) ? groupId : [groupId];
-  let couponRes: IGeneralObject<TCouponInfo> = {};
+  let couponRes: IGeneralObject<TCouponInfo|undefined> = {};
   let requestGroupIds: string[] = [];
   // 将缓存中已存在的数据取到，同时记录缓存中不存在的数据
   for (let i in groupIds) {
@@ -308,8 +311,19 @@ export async function getCouponInfo(groupId: string|string[]) {
       name: 'getCouponInfo',
       data: { groupId: requestGroupIds },
     });
-    couponInfos.forEach(couponInfo => {
-      couponRes[couponInfo.id] = couponInfoMap[couponInfo.id] = couponInfo
+    let currentMilTs = Date.now();
+    requestGroupIds.forEach(groupId => {
+      let couponInfo = couponInfos.find(({ id }) => id === groupId);
+      if (couponInfo) {
+        // 如果有数据，则格式化数据并缓存到couponInfoMap中
+        couponInfo.expireTime = new Date((couponInfo.expireTime as number) * 1000);
+        couponInfo.status = couponInfo.expireTime.getTime() < currentMilTs ? 0 : couponInfo.status;
+        if (typeof couponInfo.useLimit === 'string') {
+          couponInfo.useLimit = JSON.parse((couponInfo.useLimit as string) || '[]');
+        }
+        couponInfoMap[couponInfo.id] = couponInfo;
+      }
+      couponRes[groupId] = couponInfo;
     });
   }
 
@@ -323,16 +337,94 @@ export async function getCouponInfo(groupId: string|string[]) {
 }
 
 /**
+ * @description: 传入dishId返回对应菜品的信息
+ * @author: JOU(wx: huzhen555)
+ * @param {string|string[]}  dishId 菜品id
+ * @return: 对应菜品id的信息
+ */
+export async function getDishInfo(dishId: string|string[]) {
+  type TDishInfo = {
+    id: string,
+    name: string,
+    media: string[],
+    describe: string, 
+    price: number, 
+    tag: string, 
+    spicyLevel: number, 
+    skuOptions: { name: string, options: string[] }[],
+    status: number,
+  };
+  
+  // 断言参数
+  assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
+  let globalDishesKey = 'dishesInfo';
+  let dishesInfoMap = globalData.get<IGeneralObject<TDishInfo>>(globalDishesKey) || {};
+  let dishIds = Array.isArray(dishId) ? dishId : [dishId];
+  let dishesRes: IGeneralObject<TDishInfo|undefined> = {};
+  let requestDishIds: string[] = [];
+  // 将缓存中已存在的数据取到，同时记录缓存中不存在的数据
+  for (let i in dishIds) {
+    let idItem = dishIds[i];
+    let dishInfo = dishesInfoMap[idItem];
+    if (!dishInfo) {
+      requestDishIds.push(idItem);
+    }
+    else {
+      dishesRes[dishInfo.id] = dishInfo;
+    }
+  }
+
+  // 如果需要请求获取数据，则调用服务方法获取
+  if (requestDishIds.length > 0) {
+    let dishInfos = await callServerFunction<TDishInfo[]>({
+      name: 'getDishInfo',
+      data: { dishId: requestDishIds },
+    });
+    requestDishIds.forEach(dishId => {
+      let couponInfo = dishInfos.find(({ id }) => id === dishId);
+      if (couponInfo) {
+        // 如果有数据，则格式化数据并缓存到dishesInfoMap中
+        dishesInfoMap[couponInfo.id] = couponInfo;
+      }
+      dishesRes[dishId] = couponInfo;
+    });
+  }
+
+  if (Array.isArray(dishId)) {
+    return dishesRes;
+  }
+  else {
+    let keys = Object.keys(dishesRes);
+    return keys.length > 0 ? dishesRes[keys[0]] : null;
+  }
+}
+
+/**
  * @description: 获取当前餐厅的门店信息
  * @author: JOU(wx: huzhen555)
  * @return: 包含餐厅门店信息的promise
  */
 export async function getShopInfo() {
+  type TShopInfo = {
+    id: string,
+    shopName: string, 
+    avatar: string, 
+    shortIntro?: string, 
+    openTime: {
+      day: (0|1|2|3|4|5|6)[], 
+      startTime: string,
+      endTime: string
+    }[],
+    detailedIntro: {title: string, content: string},
+    address: string,
+    coordinate: number[],
+    homepageImage?: string,
+  };
+
   let globalShopInfoKey = 'shopInfo';
-  let shopInfo = globalData.get<any>(globalShopInfoKey);
+  let shopInfo = globalData.get<TShopInfo>(globalShopInfoKey);
   if (!shopInfo) {
-    shopInfo = await callServerFunction<any>({ name: 'getShopInfo' });
-    shopInfo.detailedIntroStr = JSON.parse(shopInfo.detailedIntroStr || '{}');
+    shopInfo = await callServerFunction<TShopInfo>({ name: 'getShopInfo' });
     globalData.set(globalShopInfoKey, shopInfo);
   }
   
@@ -375,7 +467,7 @@ export async function notifyMessage(channel?: string) {
  * @param {string} shopId 餐厅id
  */
 export function changeShop(shopId: string) {
-  shopId = shopId.trim();
+  shopId = shopId.toString().trim();
   let currentShopId = globalData.get<string>('shopId') || '';
   if (shopId && currentShopId !== shopId) {
     location.href = location.href.replace(/\w+(\/\w+\/)online/, (mat, rep) => {

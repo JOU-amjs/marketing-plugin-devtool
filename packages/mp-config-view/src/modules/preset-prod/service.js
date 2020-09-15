@@ -1,13 +1,13 @@
 /*
  * @Date: 2019-08-26 19:22:14
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 16:45:20
+ * @LastEditTime: 2020-09-15 18:27:21
  */
 import invoke from 'react-native-webview-invoke/browser';
 
 // postData：参数为需要提交的配置参数
 // _emitSubmit：触发onSubmit事件回调
-let submitEventCallback;
+let submitEventCallback = null;
 // const postDataCallbacks = {};
 // /**
 //  * @description: native端选择数据后触发此函数将选择数据传递给web端
@@ -60,6 +60,11 @@ invoke.define('_emitSubmit', async () => {
 });
 
 export default {
+  /**
+   * @description: 绑定配置页提交按钮的点击事件回调，通过该回调返回保存的配置数据，抛出错误则会弹出警告弹框
+   * @author: JOU(wx: huzhen555)
+   * @param {function} callback 配置页提交按钮的点击事件回调
+   */
   onSubmit(callback) {
     if (typeof callback === 'function') {
       submitEventCallback = callback;

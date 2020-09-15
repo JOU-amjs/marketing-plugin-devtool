@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-15 11:45:15
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 11:54:42
+ * @LastEditTime: 2020-08-24 21:21:56
  */ 
 const { paths } = require('../../../config');
 const { Router } = require('express');
@@ -24,6 +24,15 @@ const viewProgramObject = {
   },
   getConfiguration() {
     return readConfigData();
+  },
+  giveCoupon(_) {
+    return {
+      couponId: 123,
+      couponName: '测试优惠券',
+      couponStr: '可抵用10元',
+      useLimit: '周六日不可用',
+      useDays: 30,
+    };
   }
 }
 

@@ -1,5 +1,30 @@
 
 /* 用于存放被继承的通用类 */
+/* 通用按钮样式 */
+.u-btn {
+	align-self: center;
+  background: linear-gradient(to right, $color-main, $color-main-shallow);
+  border-radius: 48px;
+  padding: 4px 20px;
+  color: #fff;
+  margin: 0;
+  border: none;
+}
+.u-btn::after {
+  border: 0;
+}
+.u-btn-border {
+  align-self: center;
+  background: transparent;
+  border: solid 1px $color-main;
+  border-radius: 48px;
+  padding: 0 16px;
+  color: $color-main;
+  margin: 0;
+}
+.u-btn::after, .u-btn-border::after {
+  border: 0;
+}
 
 /* 通用按钮样式 */
 // 空

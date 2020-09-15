@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-07-09 14:35:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-05 21:36:06
+ * @LastEditTime: 2020-09-15 20:29:08
  */
 import invoke from 'react-native-webview-invoke/browser';
 
@@ -55,10 +55,10 @@ export default {
    * @description: 跳转到native选择优惠券组页，并异步返回优惠券组数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据
    */
-  selectCoupons() {
-    return _navigate('coupons');
+  selectCouponGroup(params = {}) {
+    return _navigate('couponGroup', params);
   },
-
+  
   /**
    * @description: 跳转到native选择时间页，并异步返回时间数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据

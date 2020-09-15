@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "serve:cross": "vue-cli-service serve --mode cross",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },

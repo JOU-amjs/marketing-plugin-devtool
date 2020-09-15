@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-06-02 15:22:39
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-13 21:54:22
+ * @LastEditTime: 2020-08-25 11:44:30
  */ 
 import App from './App.vue';
 import Error from './Error.vue';
@@ -23,14 +23,17 @@ new Vue({
   render: h => h(App)
 }).$mount('#__MARKETING_AD__');
 
-// 解析地址，获取关键参数并放到header中
-let keyParams = parseKeyParams(window.location.pathname);
-let scriptNode = document.createElement('script');
-scriptNode.setAttribute('type', 'text/javascript');
-scriptNode.setAttribute('src', programScriptUrl(keyParams));
-scriptNode.addEventListener('error', () => {
-  new Vue({
-    render: h => h(Error)
-  }).$mount('#__MARKETING_AD__');
-})
-document.head.appendChild(scriptNode);
+// 开发环境下，当VUE_APP_DEV_CROSS的值为1时表示需要跨库调试，此时才需要请求远程插件代码
+if (process.env.NODE_ENV === 'production' || process.env.VUE_APP_DEV_CROSS === '1') {
+  // 解析地址，获取关键参数并放到header中
+  let keyParams = parseKeyParams(window.location.pathname);
+  let scriptNode = document.createElement('script');
+  scriptNode.setAttribute('type', 'text/javascript');
+  scriptNode.setAttribute('src', programScriptUrl(keyParams));
+  scriptNode.addEventListener('error', () => {
+    new Vue({
+      render: h => h(Error)
+    }).$mount('#__MARKETING_AD__');
+  });
+  document.head.appendChild(scriptNode);
+}

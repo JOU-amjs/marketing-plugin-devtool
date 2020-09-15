@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-07 19:15:21
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-15 11:20:49
+ * @LastEditTime: 2020-08-24 20:37:09
  */ 
 
 // 任何自定义的对象
@@ -16,4 +16,5 @@ export type TMapValues<T> = T[keyof T];
 export interface IResponse<T> {
   code: number,
   data: T,
+  message?: string,
 }

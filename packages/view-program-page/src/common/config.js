@@ -1,8 +1,8 @@
 /*
  * @Date: 2020-07-23 12:26:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-21 17:44:22
- */ 
+ * @LastEditTime: 2020-08-25 10:11:35
+ */
 const scriptHost = 'https://static.ycsh6.com';
 // 根据模式返回对应数据
 function getModeValue(modeOption) {

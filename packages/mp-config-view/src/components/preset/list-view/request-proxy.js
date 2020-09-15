@@ -1,101 +1,62 @@
 /*
  * @Date: 2019-12-05 15:01:36
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2019-12-05 21:04:14
+ * @LastEditTime: 2020-08-24 19:57:48
  */
 
 import { getShopDishes, getShopDishCategories } from '@/common/request';
+import { getCoupons } from '@/common/request';
 
-// 用于处理菜品数据请求的代理类
-class DishesProxy {
-  static dishesCache = {};
-  ids = [];
-  dishesFromCache = [];
-  dataCallbacks = [];
-  // 手机数据参数及数据分发回调
-  collectParams(id, dataCallback) {
-    if (!id || id.length <= 0) {
-      return;
-    }
-    const ids = Array.isArray(id) ? id : [id];
-    ids.forEach(idItem => {
-      if (DishesProxy.dishesCache[idItem]) {
-        this.dishesFromCache.push(DishesProxy.dishesCache[idItem]);
-      } else {
-        this.ids.push(idItem);
+function createProxyClass(tagName, requestFn) {
+  // 用于处理各类数据请求的代理类
+  return class EntityProxy {
+    static cache = {};
+    ids = [];
+    fromCache = [];
+    dataCallbacks = [];
+    // 收集数据参数及数据分发回调
+    collectParams(id, dataCallback) {
+      if (!id || id.length <= 0) {
+        return;
       }
-    });
-    this.dataCallbacks.push({ ids, dataCallback });
-  }
-
-  // 发送请求，并分发数据
-  async request() {
-    let dishes = this.dishesFromCache;
-    if (this.ids.length > 0) {
-      const { code, data } = await getShopDishes(this.ids.join(','));
-      if (code === 200) {
-        dishes = dishes.concat(data);
-      }
-    }
-    if (dishes.length > 0) {
-      const dataMap = {};
-      dishes.forEach(dataItem => dataMap[dataItem.dishId] = DishesProxy.dishesCache[dataItem.dishId] = dataItem);
-      this.dataCallbacks.forEach(distrubiteItem => {
-        const dishData = distrubiteItem.ids.map(idItem => dataMap[idItem]).filter(dishObj => dishObj);
-        distrubiteItem.dataCallback(dishData);
+      const ids = Array.isArray(id) ? id : [id];
+      ids.forEach(idItem => {
+        if (EntityProxy.cache[idItem]) {
+          this.fromCache.push(EntityProxy.cache[idItem]);
+        } else {
+          this.ids.push(idItem);
+        }
       });
+      this.dataCallbacks.push({ ids, dataCallback });
     }
-    this.dishesFromCache = [];
-  }
-}
-// 用于处理菜品分类数据请求的代理类
-class CategoriesProxy {
-  static catsCache = {};
-  ids = [];
-  dataCallbacks = [];
-  catsFromCache = [];
-  // 手机数据参数及数据分发回调
-  collectParams(id, dataCallback) {
-    if (!id || id.length <= 0) {
-      return;
-    }
-    const ids = (Array.isArray(id) ? id : [id])
-    ids.forEach(idItem => {
-      if (CategoriesProxy.catsCache[idItem]) {
-        this.catsFromCache.push(CategoriesProxy.catsCache[idItem]);
-      } else {
-        this.ids.push(idItem);
-      }
-    });
-    this.dataCallbacks.push({ ids, dataCallback });
-  }
 
-  // 发送请求，并分发数据
-  async request() {
-    let categories = this.catsFromCache;
-    if (this.ids.length > 0) {
-      const { code, data } = await getShopDishCategories(this.ids.join(','));
-      if (code === 200) {
-        categories = categories.concat(data);
+    // 发送请求，并分发数据
+    async request() {
+      let entities = this.fromCache;
+      if (this.ids.length > 0) {
+        const { code, data } = await requestFn(this.ids);
+        if (code === 200) {
+          entities = entities.concat(data);
+        }
       }
+      if (entities.length > 0) {
+        const dataMap = {};
+        entities.forEach(dataItem => dataMap[dataItem[tagName]] = EntityProxy.cache[dataItem[tagName]] = dataItem);
+        this.dataCallbacks.forEach(distrubiteItem => {
+          const entityData = distrubiteItem.ids.map(idItem => dataMap[idItem]).filter(item => item);
+          distrubiteItem.dataCallback(entityData);
+        });
+      }
+      this.fromCache = [];
     }
-    
-    if (categories.length > 0) {
-      const dataMap = {};
-      categories.forEach(dataItem => dataMap[dataItem.categoryId] = CategoriesProxy.catsCache[dataItem.categoryId] = dataItem);
-      this.dataCallbacks.forEach(distrubiteItem => {
-        const categoryData = distrubiteItem.ids.map(idItem => dataMap[idItem]).filter(dishObj => dishObj);
-        distrubiteItem.dataCallback(categoryData);
-      });
-    }
-    this.catsFromCache = [];
   }
 }
 
 // 各个类型的代理类
 const proxies = {
-  dish: DishesProxy,
-  category: CategoriesProxy,
+  dish: createProxyClass('dishId', ids => getShopDishes(ids)),
+  category: createProxyClass('categoryId', ids => getShopDishCategories(ids)),
+  coupon: createProxyClass('id', ids => getCoupons(ids)),
 };
 const requestProxyMap = {};
 // 请求代理，用于多个view-item中需要请求菜品或分类数据

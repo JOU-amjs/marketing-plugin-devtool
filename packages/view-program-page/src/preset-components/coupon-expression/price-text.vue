@@ -1,14 +1,14 @@
 <!--
  * @Date: 2019-10-18 14:43:30
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 13:26:08
+ * @LastEditTime: 2020-08-24 16:19:37
  -->
 <template>
-  <view class="price-text">
-    <text v-if="reduce" :class="reduceCls">-</text>
-    <text :class="moneyFlagCls">￥</text>
-    <text :class="amountCls">{{ amountDecimal }}</text>
-  </view>
+  <div class="price-text">
+    <span v-if="reduce" :class="reduceCls">-</span>
+    <span :class="moneyFlagCls">￥</span>
+    <span :class="amountCls">{{ amountDecimal }}</span>
+  </div>
 </template>
 
 <script>
@@ -90,7 +90,7 @@
   font-size: $font-text;
 }
 .money-flag-large {
-  font-size: $font-title-4;
+  font-size: $font-text-secondary;
 }
 .amount-large {
   font-size: $font-title-2;

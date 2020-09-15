@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-06 21:28:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-20 15:44:05
+ * @LastEditTime: 2020-08-24 20:38:00
 --> 
 <template>
   <div class="container">
@@ -16,6 +16,7 @@
 import WindowMessage from '@/common/window-message';
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { localhostRequest } from '@/common/network/request';
+import { IResponse } from '@/common/common.inter';
 import { Mutation } from 'vuex-class';
 import { TMutationFn } from '@/store';
 import { config } from '@vue/test-utils';
@@ -28,10 +29,12 @@ export default class ConfigFrame extends Vue {
   private reviewData() {
     this.message?.emit('_emitSubmit');
   }
-  private async postData(configData: any) {
-    let { data } = await localhostRequest.post('/mock/save_config_data', {
-      configData,
-    });
+  private async postData(configData: IResponse<any>) {
+    if (configData.code !== 200 && configData.message) {
+      this.$message.error(configData.message);
+      return;
+    }
+    let { data } = await localhostRequest.post<IResponse<any>>('/mock/save_config_data', { configData: configData.data });
     if (data.code === 200) {
       this.updateState({ configData });
       let programFrameMessage = WindowMessage.getWindowMessage('programFrame');

@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-08-13 21:07:22
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 11:47:09
+ * @LastEditTime: 2020-08-24 16:22:05
 -->
 <template>
   <div class="container flex-column">
@@ -19,7 +19,7 @@
                 <span class="text-auxiliary color-gray-2">{{ shopItem.shortIntro }}</span>
               </div>
               <div class="btn-access clickable">
-                <img src="../assets/access.png" />
+                <span class="iconfont iconjinru" />
               </div>
             </div>
           </div>
@@ -56,33 +56,33 @@ export default {
       page: 1,
       hasMore: true,
       loading: false,
-      list: [{
-        id: '11',
-        avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
-        shopName: '咔哧咔哧',
-        shortIntro: '独一无二的卡吃烹饪餐厅',
-      }, {
-        id: '12',
-        avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
-        shopName: '咔哧咔哧',
-        shortIntro: '独一无二的卡吃烹饪餐厅',
-      }, {
-        id: '13',
-        avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
-        shopName: '咔哧咔哧',
-        shortIntro: '独一无二的卡吃烹饪餐厅',
-      }, {
-        id: '14',
-        avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
-        shopName: '咔哧咔哧',
-        shortIntro: '独一无二的卡吃烹饪餐厅',
-      }, {
-        id: '15',
-        avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
-        shopName: '咔哧咔哧',
-        shortIntro: '独一无二的卡吃烹饪餐厅',
-      }],
-      // list: [],
+      // list: [{
+      //   id: '11',
+      //   avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
+      //   shopName: '咔哧咔哧',
+      //   shortIntro: '独一无二的卡吃烹饪餐厅',
+      // }, {
+      //   id: '12',
+      //   avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
+      //   shopName: '咔哧咔哧',
+      //   shortIntro: '独一无二的卡吃烹饪餐厅',
+      // }, {
+      //   id: '13',
+      //   avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
+      //   shopName: '咔哧咔哧',
+      //   shortIntro: '独一无二的卡吃烹饪餐厅',
+      // }, {
+      //   id: '14',
+      //   avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
+      //   shopName: '咔哧咔哧',
+      //   shortIntro: '独一无二的卡吃烹饪餐厅',
+      // }, {
+      //   id: '15',
+      //   avatar: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3319452976,1715840207&fm=26&gp=0.jpg',
+      //   shopName: '咔哧咔哧',
+      //   shortIntro: '独一无二的卡吃烹饪餐厅',
+      // }],
+      list: [],
     }
   },
   computed: {
@@ -196,9 +196,9 @@ export default {
     height: $iconSize;
     border-radius: $iconSize;
     background: #fff;
-    img {
-      width: 100%;
-      height: 100%;
+    span {
+      font-size: 23px;
+      color: $color-gray-4;
     }
   }
 }

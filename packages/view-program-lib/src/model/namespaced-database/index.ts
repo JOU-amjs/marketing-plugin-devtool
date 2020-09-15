@@ -1,11 +1,10 @@
 /*
  * @Date: 2020-04-11 21:13:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-21 16:13:19
+ * @LastEditTime: 2020-08-25 10:32:09
  */
 import { IGeneralObject } from '../../common/common.inter';
 import { javaRequest } from '../../common/network';
-import { getMode } from '../../common/util';
 import globalData from '../global-data';
 import argsConverters from './args-converters';
 import {
@@ -14,6 +13,7 @@ import {
 } from './forbidden-called-fns';
 import responseConvert from './response-convert';
 import assert from '../../common/assert';
+import getMode from '../../common/get-mode';
 
 type IAnyObject = IGeneralObject<any>;
 

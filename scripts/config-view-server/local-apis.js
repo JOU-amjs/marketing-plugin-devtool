@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-12-05 09:47:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 23:28:47
+ * @LastEditTime: 2020-08-24 20:58:01
  */
 const 
   { paths, moduleUrls } = require('../../config'),
@@ -52,7 +52,7 @@ module.exports = {
     const 
       { query } = url.parse(req.url, true),
       catiesObj = require(paths.scaffoldingMock.category());
-    let resData;
+    let resData = catiesObj;
     if (query.catIds) {
       resData = query.catIds.split(',').map(catId => catiesObj[catId]).filter(item => item);
     }
@@ -60,5 +60,19 @@ module.exports = {
       code: 200,
       data: resData,
     }));
-  }
+  },
+
+  '/v1/get_shop_coupon_groups': (req, res) => {
+    const 
+      { query } = url.parse(req.url, true),
+      couponObj = require(paths.scaffoldingMock.couponInfo());
+    let resData = couponObj;
+    if (query.couponGroupIds) {
+      resData = query.couponGroupIds.split(',').map(groupId => couponObj[groupId]).filter(item => item);
+    }
+    res.end(JSON.stringify({
+      code: 200,
+      data: resData,
+    }));
+  },
 }

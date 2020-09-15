@@ -1,8 +1,9 @@
 {
   "name": "el-cli",
-  "version": "1.0.14",
+  "version": "1.0.17",
   "description": "",
   "main": "src/main.js",
+  "private": true,
   "workspaces": [
     "packages/*"
   ],

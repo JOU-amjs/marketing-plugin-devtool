@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-12 09:31:36
+ * @LastEditTime: 2020-08-27 17:48:47
  */ 
 const { join } = require('path');
 const cacheDir = join(__dirname, './.cache');
@@ -34,6 +34,7 @@ exports.paths = {
   },
   distDirectory: {
     root: join(__dirname, './dist'),
+    pluginFile: join(__dirname, './dist/plugin.json'),
     assets: join(__dirname, './dist/assets'),
     configView: join(__dirname, './dist/config-view'),
     online: join(__dirname, './dist/online'),

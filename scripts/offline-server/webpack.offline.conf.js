@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-25 11:53:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-06 10:51:07
+ * @LastEditTime: 2020-08-28 17:22:02
  */
 'use strict'
 const { paths, moduleUrls } = require('../../config');
@@ -10,7 +10,7 @@ const { createWebpackEnvPlugin, buildWebpackAlias, getDevtool } = require('../co
 const envConfig = getEnvConfiguration();
 
 module.exports = {
-  mode: 'development',  // 这样才不自动压缩代码
+  mode: process.env.NODE_ENV || 'development',
   entry: paths.offline(),
   output: {
     path: envConfig.dist,

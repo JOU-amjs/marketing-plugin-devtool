@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 09:49:17
+ * @LastEditTime: 2020-08-25 10:32:43
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
@@ -11,7 +11,7 @@ import { request, javaRequest } from './common/network';
 import globalData from './model/global-data';
 import { setTitle } from './api/mp';
 import { message } from './common/message';
-import { getMode } from './common/util';
+import getMode from './common/get-mode';
 
 // 对VueRouter的参数进行扩展
 interface IRouterOptions extends RouterOptions {

@@ -1,14 +1,14 @@
 /*
  * @Date: 2020-05-29 09:30:15
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-11 21:26:09
+ * @LastEditTime: 2020-08-25 11:16:49
  */
 import { request } from '.';
 import { IGeneralObject, IResponse } from '../common.inter';
 import globalData from '../../model/global-data';
 
 type TViewProgrammeOptions = {
-  name: 'giveCoupon'|'getCouponInfo'|'getUserInfo'|'getShopInfo'|'getConfiguration'|'subscribeMessage'|'unifiedorder'|'notifyMessage',
+  name: 'giveCoupon'|'getCouponInfo'|'getUserInfo'|'getShopInfo'|'getDishInfo'|'getConfiguration'|'subscribeMessage'|'unifiedorder'|'notifyMessage',
   data?: IGeneralObject<any>,
 };
 
@@ -21,13 +21,18 @@ type TViewProgrammeOptions = {
 export default async function<T>(options: TViewProgrammeOptions) {
   let activityId = globalData.get<string>('activityId');
   let shopId = globalData.get<string>('shopId');
-  let { data } = await request.post<IResponse<T>>('/v1/call_viewprogramme_function', {
-    activityId,
-    shopId,
-    ...options,
-  });
-  if (data.code !== 200) {
-    throw new Error(`[ViewProgramServerError]${data.msg}`);
+  try {
+    let { data } = await request.post<IResponse<T>>('/v1/call_viewprogramme_function', {
+      activityId,
+      shopId,
+      ...options,
+    });
+    if (data.code !== 200) {
+      throw new Error(data.msg);
+    }
+    return data.data;
+  } catch (error) {
+    error.message = `[ViewProgramServerError]${error.message}`;
+    throw error;
   }
-  return data.data;
 }
