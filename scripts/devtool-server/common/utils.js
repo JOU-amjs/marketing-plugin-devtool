@@ -1,10 +1,12 @@
 /*
  * @Date: 2020-07-15 12:38:10
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-19 23:28:57
+ * @LastEditTime: 2020-09-25 18:19:13
  */ 
 const { existsSync, readFileSync } = require('fs');
 const { paths } = require('../../../config');
+const { parseModule } = require('./module-based');
+const { ok } = require('assert');
 
 exports.readConfigData = () => {
   let configValue = '';
@@ -13,6 +15,18 @@ exports.readConfigData = () => {
     configValue = JSON.parse(configData);
   }
   return configValue;
+}
+
+// 读取并解析服务端模块代码
+exports.getServerModule = moduleType => {
+  let exportedModule = {};
+  let serverCodePath = paths.serverDirectory() + `/${moduleType}.js`;
+  if (existsSync(serverCodePath)) {
+    let mpServerCode = readFileSync(serverCodePath);
+    exportedModule = parseModule(mpServerCode, true);
+    ok(exportedModule && typeof exportedModule === 'object', '服务端模块没有导出有效的对象');
+  }
+  return exportedModule;
 }
 
 /**

@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-08-13 21:07:22
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-24 16:22:05
+ * @LastEditTime: 2020-09-15 20:46:47
 -->
 <template>
   <div class="container flex-column">
@@ -34,8 +34,6 @@
 
 <script>
 import EL from 'view-program-lib';
-import Loading from 'vant/lib/loading';
-import 'vant/lib/loading/style';
 
 const { javaRequest, config } = EL.Page();
 export default {
@@ -45,9 +43,6 @@ export default {
       default: 3,
       validator: val => val >= 1 && val <= 3,
     }
-  },
-  components: {
-    [Loading.name]: Loading,
   },
   data() {
     return {

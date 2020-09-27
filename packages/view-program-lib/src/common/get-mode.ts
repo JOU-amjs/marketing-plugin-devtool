@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-08-25 10:30:24
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 10:34:18
+ * @LastEditTime: 2020-09-22 10:45:55
  */
 
 /**
@@ -21,7 +21,7 @@ export default function getMode() {
   if (/devMode=1/.test(href)) {
     return 'plugin-dev';
   }
-  else if (/devMode=2/.test(href)) {
+  else if (/devMode=2/.test(href) || !process.env.NODE_ENV) {
     return 'debug';
   }
   return 'prod';

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 12:36:51
+ * @LastEditTime: 2020-09-26 14:44:44
  */
 
 import {
@@ -16,9 +16,11 @@ import { MP_WEIXIN, MP_ALIPAY } from '../common/constant';
 import { TShareMessage } from '../page';
 import callServerFunction from '../common/network/call-server-function';
 import globalData from '../model/global-data';
-import assert from '../common/assert';
+import { assert } from 'helper';
 import getEchoData from '../common/network/get-echo-data';
 import { tmplCodeMap } from '../common/config';
+import getMode from '../common/get-mode';
+import { message } from '../common/message';
 
 const interactPage = '/pages/interact-webview-miniprogram/interact-webview-miniprogram';
 type TPayOptions = {
@@ -45,21 +47,33 @@ export async function pay(payOptions: TPayOptions) {
     assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
   }
   
-  let echoKey = getInteractKey();
-  let activityId = globalData.get<string>('activityId');
-  let shopId = globalData.get<string>('shopId');
-  navigateTo(interactPage, {
-    data: encodeURIComponent(JSON.stringify({
-      intent: 'pay',
-      echoKey,
-      payload: {
-        payOptions,
-        activityId,
-        shopId,
-      },
-    })),
-  });
-  return getEchoData<any>(echoKey);
+  if (getMode() === 'plugin-dev') {
+    let data: any = { payOptions };
+    if (payOptions.intent === 'couponPurchase' && payOptions.couponGroupId) {
+      data.couponInfo = await getCouponInfo(payOptions.couponGroupId);
+    }
+    message.emit('pay', data);
+    return new Promise((resolve, reject) => {
+      message.once('payComplete', (finish: boolean) => finish ? resolve() : reject(new Error('取消支付')));
+    });
+  }
+  else {
+    let echoKey = getInteractKey();
+    let activityId = globalData.get<string>('activityId');
+    let shopId = globalData.get<string>('shopId');
+    navigateTo(interactPage, {
+      data: encodeURIComponent(JSON.stringify({
+        intent: 'pay',
+        echoKey,
+        payload: {
+          payOptions,
+          activityId,
+          shopId,
+        },
+      })),
+    });
+    return getEchoData<any>(echoKey);
+  }
 }
 
 type TNoticeBased<T, U, O> = IGeneralObject<{
@@ -186,16 +200,21 @@ export async function subscribeMessage(options: TNoticeBased<(string|number)[], 
  * @param {TShareMessage} shareOptions 分享的内容
  */
 export async function share(shareOptions: TShareMessage) {
-  navigateTo(interactPage, {
-    data: window.encodeURIComponent(JSON.stringify({
-      intent: 'share',
-      payload: {
-        title: shareOptions.title,
-        imageUrl: shareOptions.imageUrl,
-        path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
-      },
-    })),
-  });
+  if (getMode() === 'plugin-dev') {
+    message.emit('toShare', shareOptions);
+  }
+  else {
+    navigateTo(interactPage, {
+      data: window.encodeURIComponent(JSON.stringify({
+        intent: 'share',
+        payload: {
+          title: shareOptions.title,
+          imageUrl: shareOptions.imageUrl,
+          path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
+        },
+      })),
+    });
+  }
 }
 
 
@@ -222,24 +241,56 @@ export async function navigateELPage(pageCode: keyof typeof pageCodes, params: I
  * @param {string} tips 授权页面的提示文字
  * @return: 用户信息
  */
-export async function getUserInfo(tips: string) {
-  type TUserInfo = {
+type TInfoLevel = 0|1|2|3;
+export const userInfo: IGeneralObject<TInfoLevel> = {
+  SIMPLE: 0,
+  PERSON: 1,
+  LOYALTY: 2,
+  WHOLE: 3,
+};
+export async function getUserInfo<T>(infoLevel: TInfoLevel = 0, tips = '') {
+  type TUserSimple = {
+    userId: string,
+  };
+  type TUserPerson = TUserSimple & {
     avatar: string,
     nickname: string,
     province: string,
     city: string,
     gender: 0|1|2,  //性别 0：未知、1：男、2：女
   };
+  type TUserLoyalty = TUserSimple & {
+    loyalValue: number,
+    level: number,
+    nextLevelValue: number,
+    levelTheme: {
+      alias: string,
+      color: string,
+      icon: string,
+    }
+  };
+  type TUserWhole = TUserPerson & TUserLoyalty;
+  const requestInfo = () => callServerFunction<T extends 'whole' ? TUserWhole 
+  : T extends 'loyalty' ? TUserLoyalty
+    : T extends 'person' ? TUserPerson 
+      : TUserSimple>({
+        name: 'getUserInfo',
+        data: { info: infoLevel },
+      });
   
-  let userInfo = await callServerFunction<TUserInfo>({ name: 'getUserInfo' });
-  if (!userInfo) {
+  let userInfo = await requestInfo();
+  if ((!userInfo || !(userInfo as TUserPerson).nickname) && (infoLevel === 1 || infoLevel === 3)) {
     let echoKey = getInteractKey();
     navigateTo('/pages/login/login', {
-      tips, 
+      tips,
+      infoLevel,
       echoKey,
       save: 'true',
     });
-    userInfo = await getEchoData<TUserInfo>(echoKey);
+    let finish = await getEchoData<boolean>(echoKey);
+    if (finish) {
+      userInfo = await requestInfo();
+    }
   }
   return userInfo;
 }
@@ -287,7 +338,7 @@ export async function getCouponInfo(groupId: string|string[]) {
   };
   
   // 断言参数
-  assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
+  assert.equalType(groupId, [Number, String, Array], 'groupIds must be given a string or a array of string');
   let globalCouponKey = 'couponInfo';
   let couponInfoMap = globalData.get<IGeneralObject<TCouponInfo>>(globalCouponKey) || {};
   let groupIds = Array.isArray(groupId) ? groupId : [groupId];
@@ -432,15 +483,21 @@ export async function getShopInfo() {
 }
 
 /**
- * @description: 获取当前餐厅的活动配置信息
+ * @description: 获取当前餐厅的活动配置信息，获取联合商家配置时支持分页获取
  * @author: JOU(wx: huzhen555)
- * @return: 包含活动配置信息的promise
+ * @param {boolean} allUnions 是否获取全部联合商家的配置
+ * @param {number} page 页码
+ * @param {number} pageSize 每页行数
+ * @return: 餐厅在配置页配置的数据，即配置页中`this.onSubmit`回调函数中返回的数据，如果allUnions=true则返回所以联合商家的配置数组
  */
-export async function getConfiguration() {
+export async function getConfiguration(allUnions = false, page = 1, pageSize = 50) {
   let globalConfigKey = 'shopConfiguration';
   let configData = globalData.get<any>(globalConfigKey);
   if (!configData) {
-    configData = await callServerFunction<any>({ name: 'getConfiguration' });
+    configData = await callServerFunction<any>({
+      name: 'getConfiguration',
+      data: { allUnions, page, pageSize },
+    });
     globalData.set(globalConfigKey, configData);
   }
   

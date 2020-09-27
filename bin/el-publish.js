@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:38
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-27 18:02:21
+ * @LastEditTime: 2020-09-17 09:27:22
  */ 
 const commander = require('commander');
 const chalk = require('chalk');
@@ -13,6 +13,8 @@ const onlineServer = require('../scripts/online-server');
 const offlineServer = require('../scripts/offline-server');
 const cpy = require('cpy');
 const archiver = require('archiver');
+const inquirer = require('inquirer');
+const inquirerConfig = require('../common/bin-modules/el-publish/inquirer-config');
 const {
   createWriteStream,
   readdirSync,
@@ -27,6 +29,7 @@ const path = require('path');
 const { getPluginType, createHashCode } = require('../common/util');
 const javaRequest = require('../common/java-request');
 const dataAssert = require('../common/common-assert');
+const package = require('../package.json');
 const {
   hashName, 
   renameFilepath
@@ -38,44 +41,56 @@ commander
   .description('发布营销插件')
   .parse();
 
-process.env.NODE_ENV = 'production';
-let spinner = ora(chalk.dim('检查编译文件...')).start();
-
-// 检查plugin.json是否
-if (!existsSync(paths.pluginFile())) {
-  spinner.fail(chalk.redBright('😣未在根目录找到plugin.json'));
-  process.exit(1);
-}
-const pluginConfig = require(paths.pluginFile());
-
-// 参数验证
-dataAssert.assertPluginName(pluginConfig.name);
-dataAssert.assertVersion(pluginConfig.version);
-dataAssert.assertIntro(pluginConfig.intro);
-dataAssert.assertDescription(pluginConfig.description);
-dataAssert.assertPluginID(pluginConfig.pluginID);
-dataAssert.assertDeveloper(pluginConfig.developer || {});
-dataAssert.assertIcon(pluginConfig.icon);
-
-spinner.text = chalk.dim('编译中...');
-// 插件类型验证
-const readTips = '，具体请看：' + chalk.blue('https://test.ycsh6.com/readme');
-let pluginType = '';
-try {
-  pluginType = getPluginType({
-    online: 1,
-    offline: 2,
-    'online-offline': 3,
-  });
-} catch (error) {
-  console.log(error);
-  spinner.fail(chalk.redBright('😣发布失败，该插件线上线下两部分的目录结构均缺失' + readTips));
-  process.exit(1);
-}
-
-
-// 编译打包
 (async () => {
+  process.env.NODE_ENV = 'production';
+  let spinner = ora(chalk.dim('检查编译文件...\n')).start();
+
+  // 检查plugin.json是否
+  if (!existsSync(paths.pluginFile())) {
+    spinner.fail(chalk.redBright('😣未在根目录找到plugin.json'));
+    process.exit(1);
+  }
+  const pluginJsonContent = readFileSync(paths.pluginFile(), { encoding: 'utf-8' }).toString();
+  const pluginConfig = JSON.parse(pluginJsonContent);
+  // 参数验证
+  dataAssert.assertPluginName(pluginConfig.name);
+  dataAssert.assertVersion(pluginConfig.version);
+  dataAssert.assertIntro(pluginConfig.intro);
+  dataAssert.assertDescription(pluginConfig.description);
+  dataAssert.assertPluginID(pluginConfig.pluginID);
+  dataAssert.assertDeveloper(pluginConfig.developer || {});
+  dataAssert.assertIcon(pluginConfig.icon);
+  // 插件类型验证
+  const readTips = '，具体请看：' + chalk.blue('https://test.ycsh6.com/readme');
+  let pluginType = '';
+  try {
+    pluginType = getPluginType({
+      online: 1,
+      offline: 2,
+      'online-offline': 3,
+    });
+  } catch (error) {
+    console.log(error);
+    spinner.fail(chalk.redBright('😣发布失败，该插件线上线下两部分的目录结构均缺失' + readTips));
+    process.exit(1);
+  }
+  
+  spinner.stop();
+  // 版本号更新询问
+  let answers = await inquirer.prompt(inquirerConfig.selectVersionStrategy(pluginConfig.version));
+  if (!answers.version) {
+    let inputAns = await inquirer.prompt(inquirerConfig.inputVersion);
+    answers.version = inputAns.version;
+  }
+  const originalVersion = pluginConfig.version;
+  pluginConfig.version = answers.version;
+
+  // 将新版本号更新到原plugin.json文件中
+  writeFileSync(paths.pluginFile(), pluginJsonContent.replace(originalVersion, answers.version), 'utf-8');
+
+  spinner.start();
+  spinner.text = chalk.dim('编译中...');
+  // 编译打包
   try {
     const hash = createHashCode(Date.now().toString());   // 随机hash
     // 根据插件类型打包不同部分
@@ -118,9 +133,7 @@ try {
     ]);
 
     // 将资源地址编译成有hash码的地址
-    let distPluginFile = paths.distDirectory.pluginFile;
-    const pluginJsonContent = readFileSync(distPluginFile, { encoding: 'utf-8' }).toString();
-    writeFileSync(distPluginFile, renameFilepath(pluginJsonContent, hash), 'utf-8');
+    writeFileSync(paths.distDirectory.pluginFile, renameFilepath(pluginConfig, hash), 'utf-8');
     
     spinner.succeed(chalk.green('🤗编译成功。'));
     // 压缩编译后的文件

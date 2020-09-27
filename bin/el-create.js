@@ -1,17 +1,7 @@
 /*
  * @Date: 2020-07-06 11:44:12
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-21 10:50:01
- */ 
-/*
- * @Date: 2020-07-06 11:44:12
- * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-16 10:35:40
- */ 
-/*
- * @Date: 2020-07-06 11:44:12
- * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-16 10:26:53
+ * @LastEditTime: 2020-09-19 11:49:07
  */
 
 const commander = require('commander');
@@ -64,6 +54,7 @@ assertPluginID(dirname);
     
     // 对脚手架内容进行编译
     spinner.text = chalk.dim('🤞正在生成项目信息...\n');
+    spinner.stop();
     await filesRender('common', { ...answers, dirname });
     let initCommand = '';
     let startupCommand = '';
@@ -82,7 +73,12 @@ assertPluginID(dirname);
     // let code = await new Promise(resolve => {
       
     // });
-    let { code } = shell.exec(initCommand);
+    let code = await new Promise(resolve => {
+      shell.exec(initCommand, { async: true }, code => {
+        resolve(code);
+      });
+    });
+    // let { code } = shell.exec(initCommand);
     if (code !== 0) {
       throw new Error('安装依赖包失败\n');
     }

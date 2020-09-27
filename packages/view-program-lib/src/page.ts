@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 14:05:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 10:32:43
+ * @LastEditTime: 2020-09-19 09:17:09
  */
 import Vue, { ComponentOptions, PluginObject, PluginFunction } from 'vue';
 import VueRouter, { RouterOptions, NavigationGuard, Route } from 'vue-router';
@@ -39,6 +39,7 @@ interface IGlobalConfig {
   plugins?: TELPlugin[],
   title: string|(() => string|Promise<string>),
   shareMessage?: TShareMessage,
+  navColor?: string,
 }
 
 let routerHookNames: ('beforeEach'|'beforeResolve'|'afterEach')[] = ['beforeEach', 'beforeResolve', 'afterEach'];
@@ -59,7 +60,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
   }
   
   // 如果routers是对象，则创建VueRouter
-  let router: VueRouter|undefined = undefined, { routers, stores, plugins, shareMessage, title } = globalConfig;
+  let router: VueRouter|undefined = undefined, { routers, stores, plugins, shareMessage, title, navColor } = globalConfig;
   if (typeof routers === 'object' && Array.isArray(routers.routes) && routers.routes.length > 0) {
     Vue.use(VueRouter);
     router = new VueRouter(routers);
@@ -88,7 +89,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
   
   // 将小程序的初始化参数传递给小程序
   // 相同插件的初始化数据一定是相同的，所以这边使用pluginId作为key
-  let mpInitData = { shareMessage };
+  let mpInitData = { shareMessage, navColor };
   globalData.set('mpInitData', mpInitData);
   if (getMode() === 'plugin-dev') {
     message.init(window.parent);
@@ -96,6 +97,7 @@ export default function Page (options: ComponentOptions<Vue> = {}, globalConfig:
       globalData.set('shopConfiguration', configData);
       console.log('%c 接收提示', 'background:green;color:white', '插件视图(线上)已收到配置数据更改通知');
     });
+    message.emit('pageConfig', mpInitData);
   }
   else {
     javaRequest.post('/user/interact/save', {

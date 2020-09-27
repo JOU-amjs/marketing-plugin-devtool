@@ -1,7 +1,7 @@
 <!--
  * @Date: 2019-08-27 16:11:43
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-24 20:48:24
+ * @LastEditTime: 2020-09-22 20:49:04
  -->
 <template>
   <div class="component">
@@ -17,7 +17,7 @@
     </div>
     <button @click="getTabsData">查看tab页数据</button>
     <div class="list-item">
-      <list-view label="带箭头链接">
+      <list-view name="abc" label="带箭头链接" show-label>
         <view-item label="选项1" sub-label="解释语1" placeholder="请选择" type="dish" :value="dishIds" @tap="selectOption"></view-item>
         <view-item label="选项2" sub-label="解释语2解释语2解释语2解释语2解释语2" placeholder="请选择" value="选项值2"></view-item>
         <view-item label="选项3" type="category" placeholder="请选择" :value="catIds" @tap="selectCats"></view-item>
@@ -25,6 +25,31 @@
         <view-item label="选项5" placeholder="请选择优惠券" type="coupon" :value="couponId" @tap="selectCoupon"></view-item>
       </list-view>
     </div>
+    <tab-wrap editable @edit="tabEdit">
+      <list-view
+        v-for="(item, i) in multipleRowColumnData" 
+        :key="i"
+        :multiple-list="item" 
+        editable
+        @edit="listViewEdit"
+        :label="`阶段${i + 1}`"
+        :sub-label="index => `时限设置${index + 1}`"
+        :name="i"
+      >
+        <template #header>
+          <view-item label="时间段" type="input" v-model="dateVal" placeholder="请选择" @tap="selectTimeMethod" />
+        </template>
+        <template #default="{ dataItem }">
+          <view-item label="欢迎" type="input-number" v-model="dataItem.a" />
+          <view-item label="欢迎" placeholder="请选择" :value="dataItem.a" @tap="selectTimeMethod" />
+        </template>
+        <template #footer>
+          <view-item label="时间段2" placeholder="请选择" @tap="selectTimeMethod" />
+          <view-item label="时间选择" placeholder="请选择" type="select" :options="[{value: 1, text:'是'}, {value: 0, text:'否'}]" v-model="timeSelect" />
+        </template>
+      </list-view>
+    </tab-wrap>
+    <button @click="print">打印</button>
   </div>
 </template>
 
@@ -41,15 +66,22 @@ export default {
       groupGreetingList: this.setRandomKey([groupGreeting]),
       dishIds: [6,7],
       catIds: [3],
-      dateVal: '',
+      dateVal: '1233',
       couponId: '1',
+      multipleRowColumnData: [[{a: 1}, {a: 2}]],
+      timeSelect: '',
     };
   },
   methods: {
+    print() {
+      console.log(this.multipleRowColumnData);
+    },
     tabEdit(action, { index }) {
       this.manageTabs(this.groupGreetingList, groupGreeting, action, index, true);
     },
-
+    listViewEdit(action, { list, index }) {
+      this.manageTabs(list, {a: ''}, action, index, true);
+    },
     getTabsData() {
       console.log(this.removeKey(this.groupGreetingList));
     },
@@ -77,8 +109,16 @@ export default {
       this.dateVal = dates;
     },
     async selectCoupon() {
-      const couponData = await this.selectCoupons();
+      const couponData = await this.selectCouponGroup();
       this.couponId = couponData.groupId;
+    },
+    async selectTimeMethod() {
+      let time = await this.selectTime();
+      console.log(time);
+    },
+    createLabel(index) {
+      console.log(index);
+      return '限时设置' + index;
     }
   },
   mounted() {

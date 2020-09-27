@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 09:53:40
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-20 18:06:57
+ * @LastEditTime: 2020-09-19 10:45:51
  */ 
 const { paths } = require('../../../config');
 const { Router } = require('express');
@@ -10,7 +10,16 @@ const { writeFileSync } = require('fs');
 const { javaHost } = require('../common/config');
 const router = Router();
 const axios = require('axios').default;
+const os = require('os');
 
+// 获取本机ip
+function getIPAdress() {
+  let interfaces = os.networkInterfaces();
+  for (let iface of Object.values(interfaces)) {
+    let alias = iface.find(({ family, address, internal }) => family === 'IPv4' && address !== '127.0.0.1' && !internal);
+    if (alias) return alias.address;
+  }
+}
 
 setCors(router);
 router.get('/get_devtool_config', (_, response) => {
@@ -18,6 +27,7 @@ router.get('/get_devtool_config', (_, response) => {
   response.json({
     code: 200,
     data: {
+      IP: getIPAdress(),
       pluginID: pluginConfig.pluginID || '',
       onlinePages: pluginConfig.onlinePages || [],
       database: pluginConfig.database || {

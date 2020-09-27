@@ -1,5 +1,5 @@
 /*!
-  * view-program-lib 0.2.8 (https://github.com/JOU amjs/view-program-lib)
+  * view-program-lib 0.5.2 (https://github.com/JOU amjs/view-program-lib)
   * API https://github.com/JOU amjs/view-program-lib/blob/master/doc/api.md
   * Copyright 2017-2020 JOU amjs. All Rights Reserved
   * Licensed under MIT (https://github.com/JOU amjs/view-program-lib/blob/master/LICENSE)
@@ -14,6 +14,7 @@ var VueRouter = _interopDefault(require('vue-router'));
 var Vuex = _interopDefault(require('vuex'));
 var axios = _interopDefault(require('axios'));
 var tsMd5 = require('ts-md5');
+var helper = require('helper');
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -95,19 +96,45 @@ function getMode() {
     if (/devMode=1/.test(href)) {
         return 'plugin-dev';
     }
-    else if (/devMode=2/.test(href)) {
+    else if (/devMode=2/.test(href) || !process.env.NODE_ENV) {
         return 'debug';
     }
     return 'prod';
 }
+
+var data = {};
+function setItem(key, val) {
+    if (val) {
+        data[key] = val;
+    }
+    else {
+        delete data[key];
+    }
+}
+var globalData = {
+    set: function (keyOrObject, val) {
+        var _a;
+        var map = typeof keyOrObject === 'object' ? keyOrObject : (_a = {}, _a[keyOrObject] = val, _a);
+        for (var key in map) {
+            setItem(key, map[key]);
+        }
+    },
+    get: function (key) {
+        var typeOfKey = typeof key;
+        if (typeOfKey === 'string' || typeOfKey === 'number') {
+            return data[key];
+        }
+    }
+};
 
 var _a;
 function environmentValue(envOption) {
     var mode = getMode();
     return envOption[mode] || '';
 }
+var hostname = process.env.NODE_ENV ? location.hostname : '';
 var host = environmentValue({
-    'plugin-dev': 'http://localhost:18001',
+    'plugin-dev': "http://" + hostname + ":18001",
     prod: 'https://api.ycsh6.com',
     debug: 'http://localhost:7001',
 });
@@ -153,36 +180,11 @@ try {
     gl = window;
 }
 catch (error) {
-    gl = global;
+    gl = {};
 }
 var wx = gl.wx;
 delete gl.wx;
 delete gl.jWeixin;
-
-var data = {};
-function setItem(key, val) {
-    if (val) {
-        data[key] = val;
-    }
-    else {
-        delete data[key];
-    }
-}
-var globalData = {
-    set: function (keyOrObject, val) {
-        var _a;
-        var map = typeof keyOrObject === 'object' ? keyOrObject : (_a = {}, _a[keyOrObject] = val, _a);
-        for (var key in map) {
-            setItem(key, map[key]);
-        }
-    },
-    get: function (key) {
-        var typeOfKey = typeof key;
-        if (typeOfKey === 'string' || typeOfKey === 'number') {
-            return data[key];
-        }
-    }
-};
 
 function getPlatform() {
     var userAgent = '';
@@ -225,7 +227,15 @@ function buildViewProgramUrl(pluginId, activityId, shopId, webPagePath, routePat
         webPagePath.substr(-1) === '/' ? webPagePath : (webPagePath + '/')
         : webPagePath;
     var routeQuery = buildUrlParams(query);
-    return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', { accessToken: globalData.get('accessToken') || '' }, {
+    var queries = { accessToken: globalData.get('accessToken') || '' };
+    var mode = globalData.get('mode');
+    if (mode === 'plugin-dev') {
+        queries.devMode = 1;
+    }
+    else if (mode === 'debug') {
+        queries.devMode = 2;
+    }
+    return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', queries, {
         pluginId: pluginId,
         activityId: activityId,
         shopId: shopId,
@@ -253,7 +263,9 @@ function navigateTo(url, params) {
                             fail: function (reason) { return reject(reason); },
                         });
                     }
-                    else if (environment === MP_ALIPAY) ;
+                    else if (environment === MP_ALIPAY) {
+                        throw new Error('暂不支持支付宝小程序');
+                    }
                     else if (environment === BROWSER) {
                         if (!/^https?/.test(url)) {
                             var params_1 = parseUrlParams(url);
@@ -371,7 +383,7 @@ function interceptor (request) {
         }
         Object.assign(args, { platform: platform, timestamp: timestamp });
         args.sign = createApiSign(args);
-        config.headers = __assign(__assign({}, (config.headers || {})), { 'Content-Type': 'application/json;charset=UTF-8' });
+        config.headers = __assign(__assign({}, (config.headers || {})), { 'Content-Type': 'application/json;charset=utf-8' });
         if (accessToken) {
             config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;
         }
@@ -412,6 +424,14 @@ interceptor(javaRequest);
 
 var receiver;
 var fnCollection = {};
+var onFn = function (name, fn, once) {
+    if (typeof fn === 'function' && typeof name === 'string') {
+        fnCollection[name] = {
+            once: false,
+            fn: fn,
+        };
+    }
+};
 var message = {
     init: function (originReceive) {
         if (!originReceive) {
@@ -422,14 +442,18 @@ var message = {
             var data = event.data;
             var emitFn = fnCollection[data.name];
             if (emitFn) {
-                emitFn.apply(null, data.args);
+                emitFn.fn.apply(null, data.args);
+                if (emitFn.once) {
+                    delete fnCollection[data.name];
+                }
             }
         });
     },
     on: function (name, fn) {
-        if (typeof fn === 'function' && typeof name === 'string') {
-            fnCollection[name] = fn;
-        }
+        onFn(name, fn);
+    },
+    once: function (name, fn) {
+        onFn(name, fn);
     },
     emit: function (name) {
         var args = [];
@@ -444,6 +468,13 @@ var message = {
 
 function mpNavigateTo(_a) {
     var path = _a.path, routePath = _a.routePath, query = _a.query;
+    if (getMode() === 'plugin-dev') {
+        message.emit('navigate', {
+            path: path,
+            routePath: routePath,
+            query: query
+        });
+    }
     return navigateTo(getMPPath(path, routePath, query));
 }
 function mpNavigateBack(delta) {
@@ -496,7 +527,7 @@ function Page(options, globalConfig) {
             }
         };
     }
-    var router = undefined, routers = globalConfig.routers, stores = globalConfig.stores, plugins = globalConfig.plugins, shareMessage = globalConfig.shareMessage, title = globalConfig.title;
+    var router = undefined, routers = globalConfig.routers, stores = globalConfig.stores, plugins = globalConfig.plugins, shareMessage = globalConfig.shareMessage, title = globalConfig.title, navColor = globalConfig.navColor;
     if (typeof routers === 'object' && Array.isArray(routers.routes) && routers.routes.length > 0) {
         Vue.use(VueRouter);
         router = new VueRouter(routers);
@@ -517,7 +548,7 @@ function Page(options, globalConfig) {
             Vue.use(pluginInstance, arg);
         });
     }
-    var mpInitData = { shareMessage: shareMessage };
+    var mpInitData = { shareMessage: shareMessage, navColor: navColor };
     globalData.set('mpInitData', mpInitData);
     if (getMode() === 'plugin-dev') {
         message.init(window.parent);
@@ -525,6 +556,7 @@ function Page(options, globalConfig) {
             globalData.set('shopConfiguration', configData);
             console.log('%c 接收提示', 'background:green;color:white', '插件视图(线上)已收到配置数据更改通知');
         });
+        message.emit('pageConfig', mpInitData);
     }
     else {
         javaRequest.post('/user/interact/save', {
@@ -557,59 +589,24 @@ function Page(options, globalConfig) {
 
 function callServerFunction (options) {
     return __awaiter(this, void 0, void 0, function () {
-        var activityId, shopId, data, error_1;
+        var activityId, shopId, data;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     activityId = globalData.get('activityId');
                     shopId = globalData.get('shopId');
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
                     return [4, request.post('/v1/call_viewprogramme_function', __assign({ activityId: activityId,
                             shopId: shopId }, options))];
-                case 2:
+                case 1:
                     data = (_a.sent()).data;
                     if (data.code !== 200) {
                         throw new Error(data.msg);
                     }
                     return [2, data.data];
-                case 3:
-                    error_1 = _a.sent();
-                    error_1.message = "[ViewProgramServerError]" + error_1.message;
-                    throw error_1;
-                case 4: return [2];
             }
         });
     });
 }
-
-var errorPrefix = 'assert';
-function assert(val, message) {
-    if (!val) {
-        throw new Error("[" + errorPrefix + "]" + (message || '参数断言失败'));
-    }
-}
-assert.notNull = function (val, message) {
-    assert(val !== null && val !== undefined, message || '参数不能为空');
-};
-assert.match = function (val, reg, message) {
-    assert(reg.test(val), message || '参数与指定正则表达式不匹配');
-},
-    assert.equal = function (val, equalVal, message) {
-        assert(val === equalVal, message || '参数与指定参数不相等');
-    },
-    assert.equalType = function (val, type, message) {
-        var typeAry = Array.isArray(type) ? type : [type];
-        var equalPass = false;
-        for (var i in typeAry) {
-            if (typeAry[i] === (val === null || val === void 0 ? void 0 : val.constructor)) {
-                equalPass = true;
-                break;
-            }
-        }
-        assert(equalPass, message || '参数与指定类型不匹配');
-    };
 
 function getEchoData (echoKey) {
     var _this = this;
@@ -655,28 +652,45 @@ var payIntent = {
 };
 function pay(payOptions) {
     return __awaiter(this, void 0, void 0, function () {
-        var echoKey, activityId, shopId;
-        return __generator(this, function (_a) {
-            assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
-            assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
-            if (payOptions.intent === 'couponPurchase') {
-                assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
+        var data, _a, echoKey, activityId, shopId;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    helper.assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
+                    helper.assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
+                    if (payOptions.intent === 'couponPurchase') {
+                        helper.assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
+                    }
+                    if (!(getMode() === 'plugin-dev')) return [3, 3];
+                    data = { payOptions: payOptions };
+                    if (!(payOptions.intent === 'couponPurchase' && payOptions.couponGroupId)) return [3, 2];
+                    _a = data;
+                    return [4, getCouponInfo(payOptions.couponGroupId)];
+                case 1:
+                    _a.couponInfo = _b.sent();
+                    _b.label = 2;
+                case 2:
+                    message.emit('pay', data);
+                    return [2, new Promise(function (resolve, reject) {
+                            message.once('payComplete', function (finish) { return finish ? resolve() : reject(new Error('取消支付')); });
+                        })];
+                case 3:
+                    echoKey = getInteractKey();
+                    activityId = globalData.get('activityId');
+                    shopId = globalData.get('shopId');
+                    navigateTo(interactPage, {
+                        data: encodeURIComponent(JSON.stringify({
+                            intent: 'pay',
+                            echoKey: echoKey,
+                            payload: {
+                                payOptions: payOptions,
+                                activityId: activityId,
+                                shopId: shopId,
+                            },
+                        })),
+                    });
+                    return [2, getEchoData(echoKey)];
             }
-            echoKey = getInteractKey();
-            activityId = globalData.get('activityId');
-            shopId = globalData.get('shopId');
-            navigateTo(interactPage, {
-                data: encodeURIComponent(JSON.stringify({
-                    intent: 'pay',
-                    echoKey: echoKey,
-                    payload: {
-                        payOptions: payOptions,
-                        activityId: activityId,
-                        shopId: shopId,
-                    },
-                })),
-            });
-            return [2, getEchoData(echoKey)];
         });
     });
 }
@@ -687,11 +701,11 @@ function subscribeMessage(options, tipText, btnText) {
             switch (_a.label) {
                 case 0:
                     messageNames = Object.keys(options);
-                    assert(messageNames.length > 0, '请至少订阅一条消息');
+                    helper.assert(messageNames.length > 0, '请至少订阅一条消息');
                     Object.keys(options).forEach(function (msgCode) {
                         var _a = options[msgCode], timing = _a.timing, channel = _a.channel, notifyData = _a.notifyData;
-                        assert(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
-                        assert(notifyData.length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
+                        helper.assert(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
+                        helper.assert(notifyData.length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
                     });
                     platform = getPlatform();
                     if (process.env.NODE_ENV !== 'production') {
@@ -717,7 +731,7 @@ function subscribeMessage(options, tipText, btnText) {
                         }
                         return tmplCodeItem.id;
                     }).filter(function (tmplCodeItem) { return tmplCodeItem; });
-                    assert(tmplIds.length > 0, '请传入有效的消息名');
+                    helper.assert(tmplIds.length > 0, '请传入有效的消息名');
                     echoKey = getInteractKey();
                     if (process.env.NODE_ENV === 'production') {
                         navigateTo(interactPage, {
@@ -783,16 +797,21 @@ function subscribeMessage(options, tipText, btnText) {
 function share(shareOptions) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            navigateTo(interactPage, {
-                data: window.encodeURIComponent(JSON.stringify({
-                    intent: 'share',
-                    payload: {
-                        title: shareOptions.title,
-                        imageUrl: shareOptions.imageUrl,
-                        path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
-                    },
-                })),
-            });
+            if (getMode() === 'plugin-dev') {
+                message.emit('toShare', shareOptions);
+            }
+            else {
+                navigateTo(interactPage, {
+                    data: window.encodeURIComponent(JSON.stringify({
+                        intent: 'share',
+                        payload: {
+                            title: shareOptions.title,
+                            imageUrl: shareOptions.imageUrl,
+                            path: getMPPath(shareOptions.path, shareOptions.routePath, shareOptions.query),
+                        },
+                    })),
+                });
+            }
             return [2];
         });
     });
@@ -806,31 +825,49 @@ function navigateELPage(pageCode, params) {
         var path;
         return __generator(this, function (_a) {
             path = pageCodes[pageCode];
-            assert.notNull(path, "invalid pageCode`" + pageCode + "`");
+            helper.assert.notNull(path, "invalid pageCode`" + pageCode + "`");
             return [2, navigateTo(path, params)];
         });
     });
 }
-function getUserInfo(tips) {
+var userInfo = {
+    SIMPLE: 0,
+    PERSON: 1,
+    LOYALTY: 2,
+    WHOLE: 3,
+};
+function getUserInfo(infoLevel, tips) {
+    if (infoLevel === void 0) { infoLevel = 0; }
+    if (tips === void 0) { tips = ''; }
     return __awaiter(this, void 0, void 0, function () {
-        var userInfo, echoKey;
+        var requestInfo, userInfo, echoKey, finish;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4, callServerFunction({ name: 'getUserInfo' })];
+                case 0:
+                    requestInfo = function () { return callServerFunction({
+                        name: 'getUserInfo',
+                        data: { info: infoLevel },
+                    }); };
+                    return [4, requestInfo()];
                 case 1:
                     userInfo = _a.sent();
-                    if (!!userInfo) return [3, 3];
+                    if (!((!userInfo || !userInfo.nickname) && (infoLevel === 1 || infoLevel === 3))) return [3, 4];
                     echoKey = getInteractKey();
                     navigateTo('/pages/login/login', {
                         tips: tips,
+                        infoLevel: infoLevel,
                         echoKey: echoKey,
                         save: 'true',
                     });
                     return [4, getEchoData(echoKey)];
                 case 2:
+                    finish = _a.sent();
+                    if (!finish) return [3, 4];
+                    return [4, requestInfo()];
+                case 3:
                     userInfo = _a.sent();
-                    _a.label = 3;
-                case 3: return [2, userInfo];
+                    _a.label = 4;
+                case 4: return [2, userInfo];
             }
         });
     });
@@ -838,7 +875,7 @@ function getUserInfo(tips) {
 function giveCoupon(groupId, userId) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            assert(groupId, 'param `groupId` must be given');
+            helper.assert(groupId, 'param `groupId` must be given');
             return [2, callServerFunction({
                     name: 'giveCoupon',
                     data: { customerId: userId, groupId: groupId },
@@ -852,7 +889,7 @@ function getCouponInfo(groupId) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    assert.equalType(groupId, [String, Array], 'groupIds must be given a string or a array of string');
+                    helper.assert.equalType(groupId, [Number, String, Array], 'groupIds must be given a string or a array of string');
                     globalCouponKey = 'couponInfo';
                     couponInfoMap = globalData.get(globalCouponKey) || {};
                     groupIds = Array.isArray(groupId) ? groupId : [groupId];
@@ -910,7 +947,7 @@ function getDishInfo(dishId) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
+                    helper.assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
                     globalDishesKey = 'dishesInfo';
                     dishesInfoMap = globalData.get(globalDishesKey) || {};
                     dishIds = Array.isArray(dishId) ? dishId : [dishId];
@@ -975,7 +1012,10 @@ function getShopInfo() {
         });
     });
 }
-function getConfiguration() {
+function getConfiguration(allUnions, page, pageSize) {
+    if (allUnions === void 0) { allUnions = false; }
+    if (page === void 0) { page = 1; }
+    if (pageSize === void 0) { pageSize = 50; }
     return __awaiter(this, void 0, void 0, function () {
         var globalConfigKey, configData;
         return __generator(this, function (_a) {
@@ -984,7 +1024,10 @@ function getConfiguration() {
                     globalConfigKey = 'shopConfiguration';
                     configData = globalData.get(globalConfigKey);
                     if (!!configData) return [3, 2];
-                    return [4, callServerFunction({ name: 'getConfiguration' })];
+                    return [4, callServerFunction({
+                            name: 'getConfiguration',
+                            data: { allUnions: allUnions, page: page, pageSize: pageSize },
+                        })];
                 case 1:
                     configData = _a.sent();
                     globalData.set(globalConfigKey, configData);
@@ -1021,6 +1064,7 @@ var el = /*#__PURE__*/Object.freeze({
     subscribeMessage: subscribeMessage,
     share: share,
     navigateELPage: navigateELPage,
+    userInfo: userInfo,
     getUserInfo: getUserInfo,
     giveCoupon: giveCoupon,
     getCouponInfo: getCouponInfo,
@@ -1110,133 +1154,25 @@ var NamespacedStorage = (function () {
     return NamespacedStorage;
 }());
 
-var converterErrors = {
-    argsLength: function (fnName, length) {
-        return "function " + fnName + " expected 1 arg bug got " + length;
-    },
-};
-var argsConverters = {
-    insert: function (val, _) {
-        assert(val.length === 1, converterErrors.argsLength('insert', val.length));
-        val[0] = Array.isArray(val[0]) ? val[0] : [val[0]];
-        return val;
-    },
-    limit: function (val, _) {
-        assert(val.length === 1, converterErrors.argsLength('limit', val.length));
-        return val[0];
-    },
-    skip: function (val, _) {
-        assert(val.length === 1, converterErrors.argsLength('skip', val.length));
-        return val[0];
-    },
-    sync: function (_, target) {
-        assert(Object.keys(target).length === 1 && target.collection, 'function sync must call after collection name');
-        return true;
-    },
-};
-
-var commonWord = function (name) { return "forbidden call function `" + name + "`"; };
-var collectionForbiddenCalledFns = {
-    drop: commonWord('drop') + ', instead you can delete collection by editing property `database` in plugin.js',
-};
-var dbForbiddenCalledFns = {
-    dropDatabase: commonWord('dropDatabase'),
-    createDatabase: commonWord('createDatabase'),
-    createCollection: commonWord('createCollection') + ', collections will create automatically when uploading',
-};
-
-function responseConvert (mongoData) {
-    if (Array.isArray(mongoData)) {
-        mongoData = mongoData.map(function (dataItem) {
-            if (typeof dataItem === 'string') {
-                dataItem = JSON.parse(dataItem, function (key, value) {
-                    if (key === '') {
-                        return value;
-                    }
-                    if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+Z$/.test(value)) {
-                        value = new Date(value);
-                    }
-                    else if (typeof value === 'object' && Object.keys(value).length === 1 && value.$oid) {
-                        value = value.$oid;
-                    }
-                    return value;
-                });
-            }
-            return dataItem;
-        });
-    }
-    return mongoData;
-}
-
-function createProxyedPromise(target, handler, executor) {
-    var protoProxy = new Proxy(target, handler);
-    Object.setPrototypeOf(Promise.prototype, protoProxy);
-    return new Promise(executor);
-}
-function createCollectionProxy(collectionName, activityId) {
-    var proxyObject = { collection: collectionName };
-    var collectionProxyedPromise = createProxyedPromise(proxyObject, {
-        get: function (target, key) {
-            var exceptionstring = collectionForbiddenCalledFns[key];
-            assert(typeof exceptionstring !== 'string', exceptionstring);
-            return function () {
-                var args = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i] = arguments[_i];
-                }
-                var convertFn = argsConverters[key] || (function (val, _) { return val; });
-                target[key] = convertFn(args, target);
-                return collectionProxyedPromise;
-            };
-        },
-    }, function (resolve, reject) {
-        setTimeout(function () {
-            if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-                javaRequest({
-                    url: '/mongo/collections/operation',
-                    method: 'post',
-                    data: {
-                        activityId: activityId,
-                        pluginId: globalData.get('pluginId'),
-                        env: getMode() === 'plugin-dev' ? 1 : 2,
-                        db: proxyObject,
-                    },
-                }).then(function (_a) {
-                    var data = _a.data;
-                    if (data.code !== 200) {
-                        reject(new Error(data.msg));
-                        return;
-                    }
-                    resolve(responseConvert(data.data));
-                }, function (rej) { return reject(rej); });
-            }
-            else {
-                resolve({ activityId: activityId, db: proxyObject });
-            }
-        });
-    });
-    return collectionProxyedPromise;
-}
-function createNamespacedDatabase(activityId) {
-    return new Proxy({}, {
-        get: function (_, key) {
-            var exceptionstring = dbForbiddenCalledFns[key];
-            if (typeof exceptionstring === 'string') {
-                throw new Error(exceptionstring);
-            }
-            return createCollectionProxy(key, activityId);
-        },
-    });
-}
-
 var params = parseUrlParams(window.location.search);
 var keyParams = parseKeyParams(window.location.pathname);
-globalData.set(__assign(__assign({}, params), keyParams));
 var pluginMode = getMode();
+globalData.set(__assign(__assign(__assign({}, params), keyParams), { mode: pluginMode }));
 if (!keyParams.activityId || !keyParams.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }
-var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = createNamespacedDatabase(namespace);
+var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = helper.createNamespacedDatabase(function (proxyObject) {
+    return javaRequest({
+        url: '/mongo/collections/operation',
+        method: 'post',
+        data: {
+            activityId: namespace,
+            pluginId: globalData.get('pluginId'),
+            env: getMode() === 'plugin-dev' ? 1 : 2,
+            db: proxyObject,
+        },
+    });
+});
 if (pluginMode === 'prod') {
     Object.defineProperties(window, {
         localStorage: { value: localStorage },

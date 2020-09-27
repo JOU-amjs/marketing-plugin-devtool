@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-07-07 22:50:27
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 18:42:19
+ * @LastEditTime: 2020-09-18 09:32:29
  */
 import selectorProd from './preset-prod/selector';
 import serviceProd from './preset-prod/service';
@@ -57,7 +57,7 @@ const utils = {
 
 // 开发模式下的通信接口
 let preset;
-if (/devMode=1/.test(window.location.href)) {
+if (/devMode=1/.test(window.location.href) || process.env.NODE_ENV === 'development') {
   message.init();
   preset = {
     ...selectorDev, 

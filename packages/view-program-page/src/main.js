@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-06-02 15:22:39
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 11:44:30
+ * @LastEditTime: 2020-09-21 09:19:02
  */ 
 import App from './App.vue';
 import Error from './Error.vue';
@@ -9,6 +9,8 @@ import EL from 'view-program-lib';
 import { parseKeyParams } from './common/util';
 import { programScriptUrl } from './common/config';
 import * as presetComponent from './preset-components';
+import Vant, { Lazyload } from 'vant';
+import 'vant/lib/index.css';
 
 window.EL = EL;
 const { Vue } = EL.Page();
@@ -18,6 +20,10 @@ Vue.config.productionTip = false;
 Object.keys(presetComponent).forEach(name => {
   Vue.component(name, presetComponent[name]);
 });
+
+// 将vant组件作为预设组件库
+Vue.use(Vant);
+Vue.use(Lazyload);
 
 new Vue({
   render: h => h(App)

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-27 17:48:47
+ * @LastEditTime: 2020-09-19 11:12:37
  */ 
 const { join } = require('path');
 const cacheDir = join(__dirname, './.cache');
@@ -55,13 +55,13 @@ exports.moduleUrls = {
   },
   mpConfigView: {
     protocol: 'http',
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 18002,
     publicPath: join(distPath, 'mp-config-view'),
   },
   viewProgramPage: {
     protocol: 'http',
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 18003,
     publicPath: join(distPath, 'view-program-page'),
   },

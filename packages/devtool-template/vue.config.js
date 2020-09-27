@@ -1,10 +1,20 @@
 /*
  * @Date: 2020-07-07 19:37:47
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-20 14:44:22
+ * @LastEditTime: 2020-09-22 14:52:43
  */ 
 const path = require('path');
 const bodyParser = require('body-parser');
+const os = require('os');
+
+// 获取本机ip
+function getIPAdress() {
+  let interfaces = os.networkInterfaces();
+  for (let iface of Object.values(interfaces)) {
+    let alias = iface.find(({ family, address, internal }) => family === 'IPv4' && address !== '127.0.0.1' && !internal);
+    if (alias) return alias.address;
+  }
+}
 
 module.exports = {
   lintOnSave: false,
@@ -31,7 +41,8 @@ module.exports = {
         response.json({
           code: 200,
           data: {
-            pluginID: 'mock-plugin-ID',
+            IP: getIPAdress(),
+            pluginID: 'mock__ID',
             onlinePages: [
               { path: 'index' },
               { path: 'rank' }

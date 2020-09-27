@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-08-14 11:47:53
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 12:55:08
+ * @LastEditTime: 2020-09-23 09:04:57
 -->
 <!--
  * @Date: 2020-08-14 11:47:53
@@ -13,17 +13,29 @@
     <van-loading size="24px">加载中...</van-loading>
   </div>
   <div class="flex-column" v-else>
-    <div class="dish-item-wrap" v-for="couponInfo in couponInfos" :key="couponInfo.id">
+    <div :class="['dish-item-wrap', typeof itemStyle === 'string' ? itemStyle : '']" 
+      :style="typeof itemStyle === 'object' ? itemStyle : ''"
+      v-for="couponInfo in couponInfos" 
+      :key="couponInfo.id"
+    >
       <dish-hori-rack v-if="couponInfo.couponData.dishes_id && couponDishInfos[couponInfo.couponData.dishes_id]" 
-        :couponData="couponInfo"
+        :coupon-data="couponInfo"
         :data="couponDishInfos[couponInfo.couponData.dishes_id]"
-        :couponPrice="couponInfo.price"
+        :coupon-price="listDataMap[couponInfo.id].price"
+        :btn-text="btnText"
+        :btn-disabled="listDataMap[couponInfo.id].btnDisabled"
+        :btn-loading="listDataMap[couponInfo.id].btnLoading"
+        :progress="listDataMap[couponInfo.id].progress"
         @box-press="boxPressHandler(couponInfo, couponDishInfos[couponInfo.couponData.dishes_id])"
         @btn-press="btnPressHandler(couponInfo, couponDishInfos[couponInfo.couponData.dishes_id])"
       />
       <amount-sales v-else 
-        :couponData="couponInfo" 
-        :couponPrice="couponInfo.price"
+        :coupon-data="couponInfo" 
+        :coupon-price="listDataMap[couponInfo.id].price"
+        :btn-text="btnText"
+        :btn-disabled="listDataMap[couponInfo.id].btnDisabled"
+        :btn-loading="listDataMap[couponInfo.id].btnLoading"
+        :progress="listDataMap[couponInfo.id].progress"
         @box-press="boxPressHandler(couponInfo, {})"
         @btn-press="btnPressHandler(couponInfo, {})"
       />
@@ -32,8 +44,6 @@
 </template>
 <script>
 import EL from 'view-program-lib';
-import Loading from 'vant/lib/loading';
-import 'vant/lib/loading/style';
 import dishHoriRack from './dish-hori-rack.vue';
 import AmountSales from './amount-sales.vue';
 
@@ -44,30 +54,30 @@ export default {
       type: Array,
       required: true,
     },
+    btnText: String,
     showPrepurchaseCoupon: {
       type: Boolean,
       default: false,
     },
+    itemStyle: [String, Object],
   },
   components: {
     dishHoriRack,
     AmountSales,
-    [Loading.name]: Loading,
   },
   data() {
     return {
       loading: false,
       page: 1,
       row: 10,
+      listDataMap: {},
       couponInfos: [],
       couponDishInfos: {},
     };
   },
   watch: {
     listData(newVal) {
-      this.page = 1;
-      this.couponInfos = [];
-      this.getPageCouponInfo();
+      this.reload();
     }
   },
   mounted() {
@@ -83,8 +93,11 @@ export default {
   methods: {
     async getPageCouponInfo() {
       if (this.requestCoupon.length > 0) {
+        this.requestCoupon.forEach(dataItem => this.listDataMap[dataItem.id] = dataItem);
         let couponInfos = await EL.getCouponInfo(this.requestCoupon.map(({ id }) => id));
-        this.requestCoupon.forEach(({ id, price }) => couponInfos[id].price = price);
+        if (couponInfos.length > 0) {
+          return false;
+        }
         this.couponInfos.push(...Object.values(couponInfos).filter(item => item && !item.disabled));
         this.page++;
         
@@ -92,13 +105,25 @@ export default {
         let couponDishIds = this.couponInfos.map(({ couponData }) => couponData.dishes_id).filter(item => item);
         this.couponDishInfos = await EL.getDishInfo(couponDishIds);
         Object.values(this.couponDishInfos).forEach(dishInfo => dishInfo.tag = dishInfo.suitsDishes ? '优惠组合' : dishInfo.tag);
+        return true;
       }
+      return false;
+    },
+    loadMore() {
+      return this.getPageCouponInfo();
+    },
+    reload() {
+      this.couponInfos = [];
+      this.page = 1;
+      this.getPageCouponInfo();
     },
     boxPressHandler(couponInfo, couponRefInfo) {
-      this.$emit('item-press', couponInfo, couponRefInfo);
+      let reqData = this.listDataMap[couponInfo.id];
+      this.$emit('item-press', reqData, couponInfo, couponRefInfo);
     },
     btnPressHandler(couponInfo, couponRefInfo) {
-      this.$emit('item-btn-press', couponInfo, couponRefInfo);
+      let reqData = this.listDataMap[couponInfo.id];
+      this.$emit('item-btn-press', reqData, couponInfo, couponRefInfo);
     }
   }
 };
@@ -112,7 +137,6 @@ export default {
   margin: 0 $page-margin-width;
   margin-bottom: 10px;
   border-radius: $b-rds-10;
-  padding: 10px;
   @include box-shadow(rgba(100, 100, 100, 0.1));
 }
 </style>

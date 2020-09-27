@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-05-29 09:30:15
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 11:16:49
+ * @LastEditTime: 2020-09-22 11:10:48
  */
 import { request } from '.';
 import { IGeneralObject, IResponse } from '../common.inter';
@@ -21,18 +21,13 @@ type TViewProgrammeOptions = {
 export default async function<T>(options: TViewProgrammeOptions) {
   let activityId = globalData.get<string>('activityId');
   let shopId = globalData.get<string>('shopId');
-  try {
-    let { data } = await request.post<IResponse<T>>('/v1/call_viewprogramme_function', {
-      activityId,
-      shopId,
-      ...options,
-    });
-    if (data.code !== 200) {
-      throw new Error(data.msg);
-    }
-    return data.data;
-  } catch (error) {
-    error.message = `[ViewProgramServerError]${error.message}`;
-    throw error;
+  let { data } = await request.post<IResponse<T>>('/v1/call_viewprogramme_function', {
+    activityId,
+    shopId,
+    ...options,
+  });
+  if (data.code !== 200) {
+    throw new Error(data.msg);
   }
+  return data.data;
 }

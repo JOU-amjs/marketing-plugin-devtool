@@ -3,7 +3,7 @@
     <div class="dish-tag" v-if="data.tag">
       <badge :text="data.tag" :color="dishTagColors" inverted shape="triangle" />
     </div>
-    <img class="dish-img" v-if="data.media[0]" :src="data.media[0]" />
+    <van-image fit="cover" lazy-load class="dish-img" v-if="data.media[0]" :src="data.media[0]" />
     <div class="dish-img" v-else />
     <div class="dish-info">
     	<div class="info-top">
@@ -25,19 +25,24 @@
       		</div>
       	</div>
         <div class="btn-operate flex-column">
-        	<button :class="{ 'btn-receive': true, 'btn-disabled': couponDisabled || couponReceiveOver }" 
+        	<van-button round class="btn-receive"
+            :text="btnTextComputed"
             @click.stop="receiveHandler" 
-            :disabled="couponDisabled"
-          >{{ btnText }}</button>
-          <van-progress v-if="!couponDisabled"
-            class="progress" 
-            :inactive="couponReceiveOver" 
-            :pivot-text="`剩余${leftPercent}%`" 
-            :percentage="leftPercent"
-          />
+            :disabled="couponDisabled || couponReceiveOver || btnDisabled"
+            :loading="btnLoading"
+          ></van-button>
         </div>
       </div>
     </div>
+    <van-progress v-if="!couponDisabled"
+      class="progress"
+      stroke-width="2"
+      :inactive="couponReceiveOver" 
+      :pivot-text="`剩${leftPercent}%`" 
+      :percentage="leftPercent"
+      color="linear-gradient(to right, #fbe8ee, #eea29d)"
+      pivot-color="#ff0047"
+    />
   </div>
 </template>
 
@@ -45,15 +50,17 @@
 import PromotionalTag from './promotional-tag.vue';
 import PriceText from './price-text.vue';
 import Badge from './badge.vue';
-import Progress from 'vant/lib/progress';
-import 'vant/lib/progress/style';
+import {
+  btnTextComputed,
+  couponDisabled,
+  leftPercent,
+} from './helper';
 
 export default {
   components: {
     PromotionalTag,
     PriceText,
     Badge,
-    [Progress.name]: Progress,
   },
   props: {
     data: {
@@ -67,6 +74,19 @@ export default {
     couponPrice: {
       type: Number,
       default: 0,
+    },
+    btnText: String,
+    btnDisabled: {
+      type: Boolean,
+      default: false,
+    },
+    btnLoading: {
+      type: Boolean,
+      default: false,
+    },
+    progress: {
+      type: Number,
+      validate: val => val > 0 && val < 1,
     },
   },
   computed: {
@@ -85,26 +105,20 @@ export default {
       return colorMap[this.data.tag] || '#ff0047';
     },
     couponDisabled() {
-      return this.couponData.status.toString() === '0';
+      return couponDisabled.call(this);
     },
     couponReceiveOver() {
       return this.leftPercent <= 0;
     },
-    btnText() {
-      if (this.couponDisabled) {
-        return '已过期';
-      }
-      if (this.leftPercent <= 0) {
-        return '已领完';
-      }
-      return this.couponPrice > 0 ? '抢券' : '领券';
+    btnTextComputed() {
+      return btnTextComputed.call(this);
     },
     leftPercent() {
-      let { limitAmount, receivedAmount } = this.couponData;
-      let leftPercent = (limitAmount - receivedAmount) / limitAmount * 100;
-      console.log(limitAmount, receivedAmount);
-      return Math.round(leftPercent);
+      return leftPercent.call(this);
     }
+  },
+  mounted() {
+    console.log(this.couponPrice);
   },
   methods: {
     boxPressHandler() {
@@ -123,6 +137,9 @@ export default {
   flex-direction: row;
   position: relative;
   margin-right: $page-margin-width;
+  padding: 10px;
+  padding-bottom: 20px;
+  box-sizing: border-box;
   // min-height: 170px;
 }
 .dish-tag {
@@ -150,6 +167,7 @@ export default {
   border-radius: $b-rds-10;
   flex-shrink: 0;
   background: $color-gray-bg;
+  overflow: hidden;
 }
 .dish-info {
   display: flex;
@@ -197,14 +215,18 @@ export default {
   color: $color-gray-3;
   margin-left: 4px;
 }
-.btn-operate {
+// .btn-operate {
   // flex-basis: 138rpx;
-}
+// }
 .progress {
-  margin-top: 14px;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
 }
 .btn-receive {
   @extend .u-btn;
+  transition: all 0.3s;
 }
 .btn-disabled {
   opacity: 0.5;

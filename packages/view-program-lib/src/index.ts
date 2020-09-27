@@ -1,26 +1,29 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 11:40:13
+ * @LastEditTime: 2020-09-26 14:36:38
  */
 import Page from './page';
 import * as el from './api/el';
 import * as mp from './api/mp';
 import NamespacedStorage, {LOCAL_STORAGE, SESSION_STORAGE } from './model/namespaced-storage-factory';
-import createNamespacedDatabase from './model/namespaced-database';
+import { createNamespacedDatabase } from 'helper';
 import globalData from './model/global-data';
 import { parseUrlParams, parseKeyParams } from './common/util';
 import getMode from './common/get-mode';
+import { IGeneralObject } from './common/common.inter';
+import { javaRequest } from './common/network';
 
 /* 初始化 */
 // 解析get参数和插件标识并存储到全局对象中
 let params = parseUrlParams(window.location.search);
 let keyParams = parseKeyParams(window.location.pathname);
+let pluginMode = getMode();
 globalData.set({
   ...params,
   ...keyParams,
+  mode: pluginMode,
 });
-const pluginMode = getMode();
 
 // 如果没有shopId和activityId则报错
 if (!keyParams.activityId || !keyParams.shopId) {
@@ -33,7 +36,18 @@ let
   namespace = activityId || '',
   localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE),
   sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE),
-  database = createNamespacedDatabase(namespace);
+  database = createNamespacedDatabase((proxyObject: IGeneralObject<any>) => {
+    return javaRequest({
+      url: '/mongo/collections/operation', 
+      method: 'post',
+      data: {
+        activityId: namespace,
+        pluginId: globalData.get<string>('pluginId'),
+        env: getMode() === 'plugin-dev' ? 1 : 2,
+        db: proxyObject,
+      },
+    });
+  });
 
 // 在非插件开发环境下，将原生的localStorage和sessionStorage替换为带有命名空间的对象
 if (pluginMode === 'prod') {

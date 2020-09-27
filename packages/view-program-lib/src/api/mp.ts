@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 12:58:44
+ * @LastEditTime: 2020-09-22 15:10:21
  */
 import {
   navigateTo, 
@@ -21,6 +21,13 @@ import getMode from '../common/get-mode';
  * @param {TNavOptions}  options 跳转路径的参数对象
  */
 export function mpNavigateTo({ path, routePath, query }: TNavOptions) {
+  if (getMode() === 'plugin-dev') {
+    message.emit('navigate', {
+      path,
+      routePath,
+      query
+    });
+  }
   return navigateTo(getMPPath(path, routePath, query));
 }
 

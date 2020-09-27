@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-08-27 14:09:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-24 20:45:08
+ * @LastEditTime: 2020-09-18 10:20:05
  */
 
 import {
@@ -58,7 +58,7 @@ function _navigate(page, payload) {
         res = '2019-12-10';
       }
     }
-    else if (page === 'coupons') {
+    else if (page === 'couponGroup') {
       let { data } = await getCoupons();
       data = Object.values(data);
       if (payload.multiple) {
@@ -73,6 +73,12 @@ function _navigate(page, payload) {
         let random = Math.floor(Math.random() * data.length);
         res = data[random];
       }
+    }
+    else if (page === 'time') {
+      res = payload.mode === 'range' ? {
+        startTime: '12:00',
+        endTime: '21:00',
+      } : '12:00';
     }
     resolve(res);
   });
@@ -101,16 +107,16 @@ export default {
    * @description: 跳转到native选择优惠券组页，并异步返回优惠券组数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据
    */
-  selectCoupons(params = {}) {
-    return _navigate('coupons', params);
+  selectCouponGroup(params = {}) {
+    return _navigate('couponGroup', params);
   },
 
   /**
    * @description: 跳转到native选择时间页，并异步返回时间数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据
    */
-  selectTime() {
-    return _navigate('time');
+  selectTime(params = {}) {
+    return _navigate('time', params);
   },
 
   /**

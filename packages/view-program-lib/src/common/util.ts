@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 10:30:18
+ * @LastEditTime: 2020-09-22 15:03:45
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
@@ -75,7 +75,17 @@ export function buildViewProgramUrl(pluginId: string, activityId: string, shopId
     webPagePath.substr(-1) === '/' ? webPagePath : (webPagePath + '/')
     : webPagePath;
   let routeQuery = buildUrlParams(query);
-  return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', { accessToken: globalData.get<string>('accessToken') || '' }, {
+  const queries: any = { accessToken: globalData.get<string>('accessToken') || '' };
+
+  // 构造url时要保持一样的devMode值
+  let mode = globalData.get<string>('mode');
+  if (mode === 'plugin-dev') {
+    queries.devMode = 1;
+  }
+  else if (mode === 'debug') {
+    queries.devMode = 2;
+  }
+  return buildPath('/{pluginId}/{activityId}/{shopId}/online/{webPagePath}', queries, {
     pluginId,
     activityId,
     shopId,
@@ -103,6 +113,7 @@ export async function navigateTo(url: string, params: TParam = {}) {
     }
     else if (environment === MP_ALIPAY) {
       // TODOS： 支付宝小程序跳转逻辑
+      throw new Error('暂不支持支付宝小程序');
     }
     else if (environment === BROWSER) {
       // 网页端跳转，开发环境下可用

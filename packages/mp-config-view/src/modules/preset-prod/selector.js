@@ -1,7 +1,7 @@
 /*
  * @Date: 2019-07-09 14:35:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 20:29:08
+ * @LastEditTime: 2020-09-18 09:27:29
  */
 import invoke from 'react-native-webview-invoke/browser';
 
@@ -63,8 +63,8 @@ export default {
    * @description: 跳转到native选择时间页，并异步返回时间数据
    * @return: Promise promise对象，resolve数据为native端选中回传的数据
    */
-  selectTime() {
-    return _navigate('time');
+  selectTime(params = {}) {
+    return _navigate('time', params);
   },
 
   /**

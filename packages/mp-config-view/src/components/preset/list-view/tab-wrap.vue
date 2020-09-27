@@ -1,11 +1,11 @@
 <!--
  * @Date: 2019-08-27 08:48:59
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 20:10:35
+ * @LastEditTime: 2020-09-17 18:05:55
  -->
 <template>
   <div class="container">
-    <div class="header-wrap flex-row justify-between align-center">
+    <div class="header-wrap flex-row justify-between align-center border-bottom">
       <div class="scroll-container scroll-x">
         <div class="flex-row" :style="tabsWrapStyle">
           <div class="tab-label-item flex-row border-all" v-for="(tab, i) in tabs" :key="tab.name">
@@ -157,7 +157,7 @@ export default {
 
 <style scoped>
 .header-wrap {
-  margin: 0 10px;
+  padding: 0 10px;
 }
 .scroll-container {
   width: 100%;

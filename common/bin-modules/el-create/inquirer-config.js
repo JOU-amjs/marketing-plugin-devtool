@@ -4,7 +4,7 @@ const { assertPluginName } = require("../../common-assert");
 /*
  * @Date: 2020-07-16 10:32:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-21 10:27:55
+ * @LastEditTime: 2020-09-19 11:31:53
  */ 
 module.exports = [
   {
@@ -52,10 +52,15 @@ module.exports = [
         '线上插件': 'online',
       })[input];
     }
+  },{
+    type: 'confirm',
+    message: '本插件是否支持联合营销？' + chalk.dim('(默认Yes)'),
+    name: 'union',
+    default: true,
   },
   {
     type: 'confirm',
-    message: '插件是否需要使用商家填写自定义参数' + chalk.dim('(默认Yes)'),
+    message: '本插件是否需要商家配置自定义参数？' + chalk.dim('(默认Yes)'),
     name: 'hasConfigView',
     default: true,
   }

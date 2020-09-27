@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-08-27 17:30:48
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-27 18:01:14
+ * @LastEditTime: 2020-09-17 09:18:01
  */
 const { join } = require('path');
 
@@ -20,8 +20,7 @@ exports.hashName = function(filename, hash) {
  * @param {string} pluginContent plugin.json文件内容
  * @return {string} 渲染后的文件内容
  */
-exports.renameFilepath = function(pluginContent, hash) {
-  const pluginJson = JSON.parse(pluginContent);
+exports.renameFilepath = function(pluginJson, hash) {
   pluginJson.icon = join(exports.hashName(pluginJson.icon, hash));
   if (pluginJson.cover) {
     pluginJson.cover = join(exports.hashName(pluginJson.cover, hash));

@@ -1,12 +1,13 @@
 /*
  * @Date: 2020-04-11 22:47:32
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-25 10:31:36
+ * @LastEditTime: 2020-09-26 11:06:54
  */
 
 import { MP_WEIXIN, MP_ALIPAY } from './constant';
 import { IGeneralObject } from './common.inter';
 import getMode from './get-mode';
+import globalData from '../model/global-data';
 
 // 根据环境变量返回对应数据
 type TRuntimeEnv = {
@@ -19,9 +20,23 @@ export function environmentValue(envOption: TRuntimeEnv) {
   return envOption[mode] || '';
 }
 
+/**
+ * @description: 测试环境下调用，模拟生产环境的数据，测试api时需要用到
+ * @author: JOU(wx: huzhen555)
+ */
+export function mockProdEnvironment() {
+  globalData.set({
+    shopId: 1,
+    activityId: 1,
+    pluginId: 'test_plugin',
+    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTU5MDY0NzA2MCwiZXhwIjoxNjIxNzUxMDYwfQ.sbgWHNE_f9R-sbfzQ1R7LSQxWfpFbWIt181bU9Q62Sk',
+  });
+}
 
+// 兼容mocha单元测试
+const hostname = process.env.NODE_ENV ? location.hostname : '';
 export const host = environmentValue({
-  'plugin-dev': 'http://localhost:18001',
+  'plugin-dev': `http://${hostname}:18001`,  // 用hostname可以支持在手机预览时的接口通常
   prod: 'https://api.ycsh6.com',
   // prod: 'http://localhost:7001',
   debug: 'http://localhost:7001',

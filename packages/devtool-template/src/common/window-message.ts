@@ -1,10 +1,10 @@
-import Assert from '@/common/assert';
+import { assert } from 'helper';
 import { IGeneralObject } from '@/common/common.inter';
 
 /*
  * @Date: 2020-07-14 14:50:05
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-14 14:58:18
+ * @LastEditTime: 2020-09-26 15:28:55
  */ 
 type TCallbackFn = (...args: any[]) => void;
 
@@ -14,7 +14,7 @@ export default class WindowMessage {
   private receiver: Window | null;
   private fnCollection: IGeneralObject<TCallbackFn> = {};
   constructor(originReceive: Window | null, name: string) {
-    Assert.notNull(originReceive);
+    assert.notNull(originReceive);
     this.receiver = originReceive;
     window.addEventListener('message', event => {
       const data = event.data;

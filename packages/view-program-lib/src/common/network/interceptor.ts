@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-05-28 10:45:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-07 10:09:00
+ * @LastEditTime: 2020-09-22 11:10:04
  */
 import { AxiosInstance } from 'axios';
 import { getPlatform, createApiSign } from '../util';
@@ -31,13 +31,12 @@ export default function (request: AxiosInstance) {
     
     config.headers = {
       ...(config.headers || {}),
-      'Content-Type': 'application/json;charset=UTF-8',
+      'Content-Type': 'application/json;charset=utf-8',
     };
     // 添加headers
     if (accessToken) {
       config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;
     }
-    
     return config;
   },
   error => {

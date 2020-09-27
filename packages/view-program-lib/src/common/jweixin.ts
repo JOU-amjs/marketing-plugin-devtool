@@ -1,14 +1,15 @@
 /*
  * @Date: 2020-04-10 14:00:19
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-07-06 20:29:31
+ * @LastEditTime: 2020-09-22 18:30:40
  */
+import { IGeneralObject } from './common.inter';
 
-let gl: Window | NodeJS.Global;
+let gl: Window | IGeneralObject<any>;
 try {
   gl = window;
 } catch (error) {
-  gl = global;
+  gl = {};
 }
 
 const wx = (gl as any).wx;

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-16 10:34:27
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-27 17:26:11
+ * @LastEditTime: 2020-09-19 11:37:04
  */ 
 const { paths } = require("../../../config");
 const fs = require('fs');
@@ -11,7 +11,7 @@ const artTemplate = require("art-template");
 
 const renders = {
   // 基础班模板渲染函数
-  common({ dirname, pluginID, intro, description, name, devid, type, secret, hasConfigView },  filePaths, files) {
+  common({ dirname, pluginID, intro, description, name, devid, type, secret, union, hasConfigView },  filePaths, files) {
     // 渲染package.json文件内容
     let packageFilePath = filePaths.packageJson;
     if (files[packageFilePath]) {
@@ -30,6 +30,7 @@ const renders = {
         pluginDirName: dirname,
         devId: devid || '',
         devSecret: secret || '',
+        union,
         hasConfigView,
         type,
       });

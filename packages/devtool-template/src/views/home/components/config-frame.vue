@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-06 21:28:03
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-24 20:38:00
+ * @LastEditTime: 2020-09-20 16:37:20
 --> 
 <template>
   <div class="container">
@@ -36,9 +36,9 @@ export default class ConfigFrame extends Vue {
     }
     let { data } = await localhostRequest.post<IResponse<any>>('/mock/save_config_data', { configData: configData.data });
     if (data.code === 200) {
-      this.updateState({ configData });
+      this.updateState({ configData: configData.data });
       let programFrameMessage = WindowMessage.getWindowMessage('programFrame');
-      programFrameMessage?.emit('configData', configData);
+      programFrameMessage?.emit('configData', configData.data);
       this.$message.success('提交成功，请左侧查看数据');
     }
   }

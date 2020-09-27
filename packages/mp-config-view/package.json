@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "vue-cli-service serve",
-    "start:cross": "vue-cli-service serve --mode cross",
+    "serve": "vue-cli-service serve",
+    "serve:cross": "vue-cli-service serve --mode cross",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
