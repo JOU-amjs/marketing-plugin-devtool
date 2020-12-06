@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-08-13 21:07:22
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-15 20:46:47
+ * @LastEditTime: 2020-10-26 09:35:12
 -->
 <template>
   <div class="container flex-column">
@@ -11,7 +11,7 @@
         <div class="shop-wrap flex-column">
           <div class="wrap flex-row align-center" ref="shopItem" v-for="shopItem in list" :key="shopItem.id" :style="itemStyle">
             <div class="avatar avatar-wrap" @click="nav2Homepage(shopItem.id)">
-              <img class="avatar" :src="shopItem.avatar" />
+              <img class="avatar" :src="shopItem.avatar | assetsPath('avatar')" />
             </div>
             <div class="content-wrap flex-row align-center justify-between" @click="toggleShop(shopItem.id)">
               <div class="content flex-column">

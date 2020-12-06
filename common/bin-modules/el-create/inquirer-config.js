@@ -1,11 +1,19 @@
-const chalk = require("chalk");
-const { assertPluginName } = require("../../common-assert");
-
 /*
  * @Date: 2020-07-16 10:32:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-19 11:31:53
+ * @LastEditTime: 2020-11-09 11:19:16
  */ 
+const chalk = require('chalk');
+const { assertPluginName } = require('../../common-assert');
+const shell = require('shelljs');
+
+let choices = ['不安装依赖(通常用于多个项目集中管理依赖)'];
+if (shell.which('npm')) {
+  choices.unshift('npm');
+}
+if (shell.which('yarn')) {
+  choices.unshift('yarn');
+}
 module.exports = [
   {
     type: 'input',
@@ -22,12 +30,12 @@ module.exports = [
   },
   {
     type: 'input',
-    message: '请一句话介绍此营销插件' + chalk.dim('(14字内)'),
+    message: '请一句话介绍此营销插件' + chalk.dim('(20字内)'),
     name: 'intro',
   },
   {
     type: 'input',
-    message: '详细介绍插件功能\n' + chalk.dim('(以`\\n`换行，200字以内，如不确定后续可在plugin.json中补充)\n'),
+    message: '详细介绍插件功能\n' + chalk.dim('(以`\\n`换行，1500字以内，如不确定后续可在plugin.json中补充)\n'),
     name: 'description',
   },
   {
@@ -52,16 +60,17 @@ module.exports = [
         '线上插件': 'online',
       })[input];
     }
-  },{
-    type: 'confirm',
-    message: '本插件是否支持联合营销？' + chalk.dim('(默认Yes)'),
-    name: 'union',
-    default: true,
   },
   {
     type: 'confirm',
-    message: '本插件是否需要商家配置自定义参数？' + chalk.dim('(默认Yes)'),
-    name: 'hasConfigView',
-    default: true,
+    message: '本插件是否支持联合营销？' + chalk.dim('(默认No)'),
+    name: 'union',
+    default: false,
+  },
+  {
+    type: 'list',
+    message: '选择安装命令',
+    name: 'command',
+    choices,
   }
 ];

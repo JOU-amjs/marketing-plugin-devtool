@@ -1,7 +1,7 @@
 <!--
  * @Date: 2020-07-07 00:14:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-26 15:46:26
+ * @LastEditTime: 2020-10-26 16:17:38
 --> 
 <template>
   <div id="container">
@@ -144,11 +144,13 @@ export default class App extends Vue {
     let { path = '', routePath = '', query = {} } = this.routeInfo;
     path = path && path.substr(-1, 1) !== '/' ? `${path}/` : path;
     routePath = routePath.substr(0, 1) === '/' ? routePath : `/${routePath}`;
-    query.devMode = 1;
-    query.accessToken = accessToken;
+    let search = {
+      devMode: 1,
+      accessToken,
+    };
     
     // 以下是在插件开发环境下添加的数值
-    return `${host}:18003/${this.pluginID}/${activityId}/${shopId}/online/${path}?${query2String(query)}#${routePath}`;
+    return `${host}:18003/${this.pluginID}/${activityId}/${shopId}/online/${path}?${query2String(search)}#${routePath}?${query2String(query)}`;
   }
   get navStyle() {
     return this.pageConfig.navColor ? { background: this.pageConfig.navColor } : {};

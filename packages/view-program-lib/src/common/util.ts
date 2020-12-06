@@ -1,13 +1,12 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-22 15:03:45
+ * @LastEditTime: 2020-09-30 20:53:13
  */
 import { MP_WEIXIN, MP_ALIPAY, BROWSER, NODE } from './constant';
 import { IGeneralObject } from './common.inter';
 import wx from './jweixin';
-import { apiSign, viewProgramPath } from '../common/config';
-import { Md5 } from 'ts-md5';
+import { viewProgramPath } from '../common/config';
 import globalData from '../model/global-data';
 
 /**
@@ -150,19 +149,19 @@ export async function navigateBack(delta = 1) {
   });
 }
 
-/**
- * @description: 创建接口的签名，签名会自动过滤没有值的参数
- * @author: JOU(wx: huzhen555)
- * @param {object}  params 需要加密签名的数据对象
- * @return: 签名
- */
-export function createApiSign(params: IGeneralObject<string> = {}) {
-  const rawStr = Object.keys(params).sort()
-  .map(key => params[key] !== undefined ? `${key}=${params[key]}` : undefined)
-  .filter(item => item)
-  .join(apiSign.connectSymbol) + apiSign.key;
-  return Md5.hashStr(rawStr) as string;
-}
+// /**
+//  * @description: 创建接口的签名，签名会自动过滤没有值的参数
+//  * @author: JOU(wx: huzhen555)
+//  * @param {object}  params 需要加密签名的数据对象
+//  * @return: 签名
+//  */
+// export function createApiSign(params: IGeneralObject<string> = {}) {
+//   const rawStr = Object.keys(params).sort()
+//   .map(key => params[key] !== undefined ? `${key}=${params[key]}` : undefined)
+//   .filter(item => item)
+//   .join(apiSign.connectSymbol) + apiSign.key;
+//   return Md5.hashStr(rawStr) as string;
+// }
 
 /**
  * @description: 构建url中的参数

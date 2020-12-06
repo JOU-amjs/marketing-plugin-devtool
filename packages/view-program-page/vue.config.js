@@ -1,9 +1,11 @@
 /*
  * @Date: 2020-06-02 15:54:23
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-14 09:02:40
+ * @LastEditTime: 2020-10-26 17:21:09
  */ 
 const path = require('path');
+const CompressionWebpackPlugin = require('compression-webpack-plugin');
+const productionGzipExtensions = ['js', 'css'];
 
 module.exports = {
   lintOnSave: false,
@@ -21,5 +23,13 @@ module.exports = {
         ],
       });
     });
+
+    // 添加插件
+    config.plugin('compression').use(CompressionWebpackPlugin, [{
+      algorithm: 'gzip',
+      test: new RegExp('\\.(' + productionGzipExtensions.join('|') + ')$'),
+      threshold: 10240,
+      minRatio: 0.8
+    }]);
   },
 };

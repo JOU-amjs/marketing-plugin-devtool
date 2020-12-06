@@ -1,13 +1,13 @@
 /*
  * @Date: 2020-07-15 11:45:15
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-26 15:50:46
+ * @LastEditTime: 2020-10-26 15:48:28
  */ 
 const { paths } = require('../../../config');
 const { Router } = require('express');
 const { readConfigData, setCors, getServerModule } = require('../common/utils');
 const Server = require('../common/Server').default;
-const { createNamespacedDatabase } = require('../../../packages/helper');
+const { createNamespacedDatabase } = require('ycsh6-helper');
 const { javaHost } = require('../common/config');
 const axios = require('axios').default;
 

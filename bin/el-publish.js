@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:38
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-17 09:27:22
+ * @LastEditTime: 2020-11-09 10:51:12
  */ 
 const commander = require('commander');
 const chalk = require('chalk');
@@ -29,7 +29,6 @@ const path = require('path');
 const { getPluginType, createHashCode } = require('../common/util');
 const javaRequest = require('../common/java-request');
 const dataAssert = require('../common/common-assert');
-const package = require('../package.json');
 const {
   hashName, 
   renameFilepath
@@ -52,14 +51,30 @@ commander
   }
   const pluginJsonContent = readFileSync(paths.pluginFile(), { encoding: 'utf-8' }).toString();
   const pluginConfig = JSON.parse(pluginJsonContent);
+
+  // 如果目录中有.description文件则读取它的内容并赋值到pluginConfig.description
+  // 表示如果有外部描述文件则用它的内容
+  if (existsSync(paths.descriptionFile())) {
+    let description = readFileSync(paths.descriptionFile(), { encoding: 'utf-8' }).toString();
+    if (description) {
+      pluginConfig.description = description;
+    }
+  }
+  
   // 参数验证
-  dataAssert.assertPluginName(pluginConfig.name);
-  dataAssert.assertVersion(pluginConfig.version);
-  dataAssert.assertIntro(pluginConfig.intro);
-  dataAssert.assertDescription(pluginConfig.description);
-  dataAssert.assertPluginID(pluginConfig.pluginID);
-  dataAssert.assertDeveloper(pluginConfig.developer || {});
-  dataAssert.assertIcon(pluginConfig.icon);
+  try {
+    dataAssert.assertPluginName(pluginConfig.name);
+    dataAssert.assertVersion(pluginConfig.version);
+    dataAssert.assertIntro(pluginConfig.intro);
+    dataAssert.assertDescription(pluginConfig.description);
+    dataAssert.assertPluginID(pluginConfig.pluginID);
+    dataAssert.assertDeveloper(pluginConfig.developer || {});
+    dataAssert.assertIcon(pluginConfig.icon);
+  } catch (error) {
+    spinner.fail(chalk.redBright('😣参数验证失败：' + error.message));
+    process.exit(1);
+  }
+  
   // 插件类型验证
   const readTips = '，具体请看：' + chalk.blue('https://test.ycsh6.com/readme');
   let pluginType = '';
@@ -70,7 +85,7 @@ commander
       'online-offline': 3,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     spinner.fail(chalk.redBright('😣发布失败，该插件线上线下两部分的目录结构均缺失' + readTips));
     process.exit(1);
   }
@@ -134,7 +149,6 @@ commander
 
     // 将资源地址编译成有hash码的地址
     writeFileSync(paths.distDirectory.pluginFile, renameFilepath(pluginConfig, hash), 'utf-8');
-    
     spinner.succeed(chalk.green('🤗编译成功。'));
     // 压缩编译后的文件
     let filepaths = readdirSync(paths.distDirectory.root);

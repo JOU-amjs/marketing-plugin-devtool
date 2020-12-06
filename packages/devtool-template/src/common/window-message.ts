@@ -1,10 +1,10 @@
-import { assert } from 'helper';
+import { assert } from 'ycsh6-helper';
 import { IGeneralObject } from '@/common/common.inter';
 
 /*
  * @Date: 2020-07-14 14:50:05
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-26 15:28:55
+ * @LastEditTime: 2020-09-30 20:30:00
  */ 
 type TCallbackFn = (...args: any[]) => void;
 

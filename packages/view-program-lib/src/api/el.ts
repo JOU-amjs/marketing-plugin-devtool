@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:17:20
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-26 14:44:44
+ * @LastEditTime: 2020-09-30 20:30:27
  */
 
 import {
@@ -16,7 +16,7 @@ import { MP_WEIXIN, MP_ALIPAY } from '../common/constant';
 import { TShareMessage } from '../page';
 import callServerFunction from '../common/network/call-server-function';
 import globalData from '../model/global-data';
-import { assert } from 'helper';
+import { assert } from 'ycsh6-helper';
 import getEchoData from '../common/network/get-echo-data';
 import { tmplCodeMap } from '../common/config';
 import getMode from '../common/get-mode';

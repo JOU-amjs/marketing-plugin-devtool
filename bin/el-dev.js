@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 15:50:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-05 12:44:21
+ * @LastEditTime: 2020-10-24 16:46:56
  */ 
 const commander = require('commander');
 const ora = require('ora');
@@ -9,7 +9,7 @@ const assert = require('assert');
 const devtoolServer = require('../scripts/devtool-server');
 const configViewServer = require('../scripts/config-view-server');
 const onlineServer = require('../scripts/online-server');
-// const offlineServer = require('../scripts/offline-server');
+const offlineServer = require('../scripts/offline-server');
 const { moduleUrls, paths } = require('../config');
 const { buildURL } = require('../common/util');
 const chalk = require('chalk');
@@ -71,7 +71,7 @@ process.env.NODE_ENV = envs[commander.runtimeEnvironment];
     }
   }
   else if (pluginEnvironment === 'offline') {
-    starter.push(devtoolServer.start(), configViewStartFn());    // 暂时缺少onlineServer.start()
+    starter.push(devtoolServer.start(), configViewStartFn(), offlineServer.start());
   }
   
   await Promise.all(starter);

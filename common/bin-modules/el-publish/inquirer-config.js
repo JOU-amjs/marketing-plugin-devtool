@@ -1,9 +1,9 @@
 /*
  * @Date: 2020-07-16 10:32:45
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-22 13:11:14
+ * @LastEditTime: 2020-10-26 15:57:27
  */
-const versionNameMap = ['保持原版本', '增加修订版本号', '增加此版本号', '增加主版本号'];
+const versionNameMap = ['保持原版本', '增加修订版本号', '增加次版本号', '增加主版本号'];
 exports.selectVersionStrategy = function(version) {
   let versionAry = version.split('.').map(vItem => Number(vItem.replace(/-.*$/, '')));
   let newVersions = new Array(versionNameMap.length);

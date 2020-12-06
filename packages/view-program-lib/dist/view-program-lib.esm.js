@@ -9,8 +9,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import axios from 'axios';
-import { Md5 } from 'ts-md5';
-import { assert, createNamespacedDatabase } from 'helper';
+import { ApiSign, assert, createNamespacedDatabase } from 'ycsh6-helper';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -298,14 +297,6 @@ function navigateBack(delta) {
         });
     });
 }
-function createApiSign(params) {
-    if (params === void 0) { params = {}; }
-    var rawStr = Object.keys(params).sort()
-        .map(function (key) { return params[key] !== undefined ? key + "=" + params[key] : undefined; })
-        .filter(function (item) { return item; })
-        .join(apiSign.connectSymbol) + apiSign.key;
-    return Md5.hashStr(rawStr);
-}
 function buildUrlParams(params, needQuestionMark) {
     if (params === void 0) { params = {}; }
     if (needQuestionMark === void 0) { needQuestionMark = true; }
@@ -367,6 +358,7 @@ function formatTime(time) {
     return time.getFullYear() + "-" + fillZero(time.getMonth() + 1) + "-" + fillZero(time.getDate()) + " " + fillZero(time.getHours()) + ":" + fillZero(time.getMinutes()) + ":" + fillZero(time.getSeconds());
 }
 
+var as = new ApiSign(apiSign.connectSymbol, apiSign.key);
 function interceptor (request) {
     request.interceptors.request.use(function (config) {
         var platform = getPlatform(), accessToken = globalData.get('accessToken') || '', timestamp = Date.parse(new Date().toString()) / 1000;
@@ -378,7 +370,7 @@ function interceptor (request) {
             args = config.params = config.params || {};
         }
         Object.assign(args, { platform: platform, timestamp: timestamp });
-        args.sign = createApiSign(args);
+        args.sign = as.create(args);
         config.headers = __assign(__assign({}, (config.headers || {})), { 'Content-Type': 'application/json;charset=utf-8' });
         if (accessToken) {
             config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;
@@ -496,13 +488,17 @@ function updateShareMessage(shareOptions) {
     var newHash = buildPath(matches[1], params);
     window.history.replaceState(null, '', newHash);
 }
+function getUrlParam(paramName) {
+    return globalData.get(paramName) || '';
+}
 
 var mp = /*#__PURE__*/Object.freeze({
     __proto__: null,
     mpNavigateTo: mpNavigateTo,
     mpNavigateBack: mpNavigateBack,
     setTitle: setTitle,
-    updateShareMessage: updateShareMessage
+    updateShareMessage: updateShareMessage,
+    getUrlParam: getUrlParam
 });
 
 var routerHookNames = ['beforeEach', 'beforeResolve', 'afterEach'];
@@ -1151,9 +1147,10 @@ var NamespacedStorage = (function () {
 }());
 
 var params = parseUrlParams(window.location.search);
+var hashParams = parseUrlParams(window.location.hash);
 var keyParams = parseKeyParams(window.location.pathname);
 var pluginMode = getMode();
-globalData.set(__assign(__assign(__assign({}, params), keyParams), { mode: pluginMode }));
+globalData.set(__assign(__assign(__assign(__assign({}, params), hashParams), keyParams), { mode: pluginMode }));
 if (!keyParams.activityId || !keyParams.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }

@@ -1,13 +1,13 @@
 /*
  * @Date: 2020-04-09 11:06:01
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-26 14:36:38
+ * @LastEditTime: 2020-11-09 20:51:40
  */
 import Page from './page';
 import * as el from './api/el';
 import * as mp from './api/mp';
 import NamespacedStorage, {LOCAL_STORAGE, SESSION_STORAGE } from './model/namespaced-storage-factory';
-import { createNamespacedDatabase } from 'helper';
+import { createNamespacedDatabase } from 'ycsh6-helper';
 import globalData from './model/global-data';
 import { parseUrlParams, parseKeyParams } from './common/util';
 import getMode from './common/get-mode';
@@ -17,10 +17,12 @@ import { javaRequest } from './common/network';
 /* 初始化 */
 // 解析get参数和插件标识并存储到全局对象中
 let params = parseUrlParams(window.location.search);
+let hashParams = parseUrlParams(window.location.hash);
 let keyParams = parseKeyParams(window.location.pathname);
 let pluginMode = getMode();
 globalData.set({
   ...params,
+  ...hashParams,
   ...keyParams,
   mode: pluginMode,
 });

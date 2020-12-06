@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-06 11:44:12
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-19 11:49:07
+ * @LastEditTime: 2020-11-09 11:11:49
  */
 
 const commander = require('commander');
@@ -16,7 +16,6 @@ const filesRender = require('../common/bin-modules/el-create/files-render');
 const chalk = require('chalk');
 const { assertPluginID } = require('../common/common-assert');
 const pluginTypeFilter = require('../common/bin-modules/el-create/plugin-type-filter');
-
 
 commander
   .name('el')
@@ -56,31 +55,32 @@ assertPluginID(dirname);
     spinner.text = chalk.dim('🤞正在生成项目信息...\n');
     spinner.stop();
     await filesRender('common', { ...answers, dirname });
+
     let initCommand = '';
-    let startupCommand = '';
-    if (shell.which('yarn')) {
+    let startupCommand = chalk.cyan('未安装依赖，请手动执行命令');
+    if (answers.command === 'yarn') {
       initCommand = 'yarn';
       startupCommand = 'yarn ' + chalk.bold('dev:online') + chalk.cyan(' OR ') + 'yarn ' + chalk.bold('dev:offline');
     }
-    else if (shell.which('npm')) {
-      initCommand = 'npm init --registry=https://registry.npm.taobao.org';
+    else if (answers.command === 'npm') {
+      initCommand = 'npm install --registry=https://registry.npm.taobao.org';
       startupCommand = 'npm run ' + chalk.bold('dev:online') + chalk.cyan(' OR ') + 'npm run ' + chalk.bold('dev:offline');
-    }
-    if (!initCommand) {
-      throw new Error('初始化项目时要求系统已安装`npm`或`yarn`，请前往安装');
     }
     
     // let code = await new Promise(resolve => {
       
     // });
-    let code = await new Promise(resolve => {
-      shell.exec(initCommand, { async: true }, code => {
-        resolve(code);
+    // 有初始化命令才执行此命令，否则不做依赖安装操作
+    if (initCommand) {
+      let code = await new Promise(resolve => {
+        shell.exec(initCommand, { async: true }, code => {
+          resolve(code);
+        });
       });
-    });
-    // let { code } = shell.exec(initCommand);
-    if (code !== 0) {
-      throw new Error('安装依赖包失败\n');
+      // let { code } = shell.exec(initCommand);
+      if (code !== 0) {
+        throw new Error('依赖包安装失败\n');
+      }
     }
     
     spinner.succeed('营销插件开发目录创建完成🎉🎉🎉');

@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-04-09 16:14:08
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-22 15:10:21
+ * @LastEditTime: 2020-11-09 20:53:46
  */
 import {
   navigateTo, 
@@ -13,6 +13,7 @@ import {
 import { message } from '../common/message';
 import { TShareMessage, TNavOptions } from '../page';
 import getMode from '../common/get-mode';
+import globalData from '../model/global-data';
 
 
 /**
@@ -67,4 +68,14 @@ export function updateShareMessage(shareOptions: TShareMessage) {
   params.shareMessage = encodeURIComponent(JSON.stringify(shareOptions));
   let newHash = buildPath(matches[1], params);
   window.history.replaceState(null, '', newHash);
+}
+
+/**
+ * @description: 获取url参数，此方法可以统一用VueRouter和没用VueRouter时获取参数
+ * @author: JOU(wx: huzhen555)
+ * @param {string} paramName
+ * @return {string} 对应参数值
+ */
+export function getUrlParam(paramName: string) {
+  return globalData.get<string>(paramName) || '';
 }

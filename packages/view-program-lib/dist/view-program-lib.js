@@ -13,8 +13,7 @@ var Vue = _interopDefault(require('vue'));
 var VueRouter = _interopDefault(require('vue-router'));
 var Vuex = _interopDefault(require('vuex'));
 var axios = _interopDefault(require('axios'));
-var tsMd5 = require('ts-md5');
-var helper = require('helper');
+var ycsh6Helper = require('ycsh6-helper');
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -302,14 +301,6 @@ function navigateBack(delta) {
         });
     });
 }
-function createApiSign(params) {
-    if (params === void 0) { params = {}; }
-    var rawStr = Object.keys(params).sort()
-        .map(function (key) { return params[key] !== undefined ? key + "=" + params[key] : undefined; })
-        .filter(function (item) { return item; })
-        .join(apiSign.connectSymbol) + apiSign.key;
-    return tsMd5.Md5.hashStr(rawStr);
-}
 function buildUrlParams(params, needQuestionMark) {
     if (params === void 0) { params = {}; }
     if (needQuestionMark === void 0) { needQuestionMark = true; }
@@ -371,6 +362,7 @@ function formatTime(time) {
     return time.getFullYear() + "-" + fillZero(time.getMonth() + 1) + "-" + fillZero(time.getDate()) + " " + fillZero(time.getHours()) + ":" + fillZero(time.getMinutes()) + ":" + fillZero(time.getSeconds());
 }
 
+var as = new ycsh6Helper.ApiSign(apiSign.connectSymbol, apiSign.key);
 function interceptor (request) {
     request.interceptors.request.use(function (config) {
         var platform = getPlatform(), accessToken = globalData.get('accessToken') || '', timestamp = Date.parse(new Date().toString()) / 1000;
@@ -382,7 +374,7 @@ function interceptor (request) {
             args = config.params = config.params || {};
         }
         Object.assign(args, { platform: platform, timestamp: timestamp });
-        args.sign = createApiSign(args);
+        args.sign = as.create(args);
         config.headers = __assign(__assign({}, (config.headers || {})), { 'Content-Type': 'application/json;charset=utf-8' });
         if (accessToken) {
             config.headers[method.toLowerCase() || 'get']['x-access-token'] = accessToken;
@@ -500,13 +492,17 @@ function updateShareMessage(shareOptions) {
     var newHash = buildPath(matches[1], params);
     window.history.replaceState(null, '', newHash);
 }
+function getUrlParam(paramName) {
+    return globalData.get(paramName) || '';
+}
 
 var mp = /*#__PURE__*/Object.freeze({
     __proto__: null,
     mpNavigateTo: mpNavigateTo,
     mpNavigateBack: mpNavigateBack,
     setTitle: setTitle,
-    updateShareMessage: updateShareMessage
+    updateShareMessage: updateShareMessage,
+    getUrlParam: getUrlParam
 });
 
 var routerHookNames = ['beforeEach', 'beforeResolve', 'afterEach'];
@@ -656,10 +652,10 @@ function pay(payOptions) {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    helper.assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
-                    helper.assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
+                    ycsh6Helper.assert(Object.values(payIntent).indexOf(payOptions.intent) >= 0, 'intent不正确，请使用`EL.payIntent`中的属性');
+                    ycsh6Helper.assert(payOptions.amount > 0, '支付金额必须大于0，单位(元)');
                     if (payOptions.intent === 'couponPurchase') {
-                        helper.assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
+                        ycsh6Helper.assert(payOptions.couponGroupId, '购买卡券支付时，需传入couponGroupId');
                     }
                     if (!(getMode() === 'plugin-dev')) return [3, 3];
                     data = { payOptions: payOptions };
@@ -701,11 +697,11 @@ function subscribeMessage(options, tipText, btnText) {
             switch (_a.label) {
                 case 0:
                     messageNames = Object.keys(options);
-                    helper.assert(messageNames.length > 0, '请至少订阅一条消息');
+                    ycsh6Helper.assert(messageNames.length > 0, '请至少订阅一条消息');
                     Object.keys(options).forEach(function (msgCode) {
                         var _a = options[msgCode], timing = _a.timing, channel = _a.channel, notifyData = _a.notifyData;
-                        helper.assert(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
-                        helper.assert(notifyData.length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
+                        ycsh6Helper.assert(timing instanceof Date || typeof channel === 'string', "[MESSAGE_CODE:" + msgCode + "]\u5FC5\u987B\u6307\u5B9Atiming\u6216channel\u5176\u4E2D\u4E4B\u4E00");
+                        ycsh6Helper.assert(notifyData.length > 0, "[MESSAGE_CODE:" + msgCode + "]\u6A21\u677F\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A");
                     });
                     platform = getPlatform();
                     if (process.env.NODE_ENV !== 'production') {
@@ -731,7 +727,7 @@ function subscribeMessage(options, tipText, btnText) {
                         }
                         return tmplCodeItem.id;
                     }).filter(function (tmplCodeItem) { return tmplCodeItem; });
-                    helper.assert(tmplIds.length > 0, '请传入有效的消息名');
+                    ycsh6Helper.assert(tmplIds.length > 0, '请传入有效的消息名');
                     echoKey = getInteractKey();
                     if (process.env.NODE_ENV === 'production') {
                         navigateTo(interactPage, {
@@ -825,7 +821,7 @@ function navigateELPage(pageCode, params) {
         var path;
         return __generator(this, function (_a) {
             path = pageCodes[pageCode];
-            helper.assert.notNull(path, "invalid pageCode`" + pageCode + "`");
+            ycsh6Helper.assert.notNull(path, "invalid pageCode`" + pageCode + "`");
             return [2, navigateTo(path, params)];
         });
     });
@@ -875,7 +871,7 @@ function getUserInfo(infoLevel, tips) {
 function giveCoupon(groupId, userId) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            helper.assert(groupId, 'param `groupId` must be given');
+            ycsh6Helper.assert(groupId, 'param `groupId` must be given');
             return [2, callServerFunction({
                     name: 'giveCoupon',
                     data: { customerId: userId, groupId: groupId },
@@ -889,7 +885,7 @@ function getCouponInfo(groupId) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    helper.assert.equalType(groupId, [Number, String, Array], 'groupIds must be given a string or a array of string');
+                    ycsh6Helper.assert.equalType(groupId, [Number, String, Array], 'groupIds must be given a string or a array of string');
                     globalCouponKey = 'couponInfo';
                     couponInfoMap = globalData.get(globalCouponKey) || {};
                     groupIds = Array.isArray(groupId) ? groupId : [groupId];
@@ -947,7 +943,7 @@ function getDishInfo(dishId) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    helper.assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
+                    ycsh6Helper.assert.equalType(dishId, [String, Array], 'dishIds must be given a string or a array of string');
                     globalDishesKey = 'dishesInfo';
                     dishesInfoMap = globalData.get(globalDishesKey) || {};
                     dishIds = Array.isArray(dishId) ? dishId : [dishId];
@@ -1155,13 +1151,14 @@ var NamespacedStorage = (function () {
 }());
 
 var params = parseUrlParams(window.location.search);
+var hashParams = parseUrlParams(window.location.hash);
 var keyParams = parseKeyParams(window.location.pathname);
 var pluginMode = getMode();
-globalData.set(__assign(__assign(__assign({}, params), keyParams), { mode: pluginMode }));
+globalData.set(__assign(__assign(__assign(__assign({}, params), hashParams), keyParams), { mode: pluginMode }));
 if (!keyParams.activityId || !keyParams.shopId) {
     throw new Error("query `activityId` and `shopId` must be given");
 }
-var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = helper.createNamespacedDatabase(function (proxyObject) {
+var activityId = keyParams.activityId, namespace = activityId || '', localStorage = new NamespacedStorage(namespace, LOCAL_STORAGE), sessionStorage = new NamespacedStorage(namespace, SESSION_STORAGE), database = ycsh6Helper.createNamespacedDatabase(function (proxyObject) {
     return javaRequest({
         url: '/mongo/collections/operation',
         method: 'post',

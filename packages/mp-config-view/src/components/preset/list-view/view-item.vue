@@ -1,10 +1,10 @@
 <!--
  * @Date: 2019-08-29 17:36:57
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-22 21:02:21
+ * @LastEditTime: 2020-10-30 12:43:00
  -->
 <template>
-  <div class="view-item-wrap tap-highlight flex-row border-top" 
+  <div :class="['view-item-wrap', disabled ? undefined : 'tap-highlight', 'flex-row', 'border-top']" 
     :style="{ height: subLabel ? '60px' : '48px' }" 
     @click="textClickHandler"
   >
@@ -13,7 +13,12 @@
       <span class="sub-label" v-if="subLabel">{{ subLabel }}</span>
     </div>
     <div class="flex-row align-center" v-if="arrowType || type === 'select'">
-      <select class="hidden-select" v-model="inputVal" v-if="type === 'select'">
+      <select class="hidden-select" 
+        :disabled="disabled" 
+        v-model="inputVal" 
+        v-if="type === 'select'" 
+        @change="$event => $emit('change', $event)"
+      >
         <option v-for="(optItem, i) in (options || [])" :key="i" :value="optItem.value">{{ optItem.text }}</option>
       </select>
       <div class="clip-icon-wrap" v-if="imageUrl">
@@ -24,6 +29,8 @@
     </div>
     <input class="val-input" :type="inputType" 
       v-else 
+      :disabled="disabled"
+      :maxlength="maxLength"
       :placeholder="placeholder || '请输入内容'" 
       v-model="inputVal"
     />
@@ -31,6 +38,7 @@
 </template>
 
 <script>
+import { buildAssetsPath } from 'ycsh6-helper';
 import { proxyRequestData } from './request-proxy';
 export default {
   props: {
@@ -47,6 +55,11 @@ export default {
     placeholder: String,
     value: [String, Number, Array],
     options: Array,
+    maxLength: Number,
+    disabled: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {
@@ -101,7 +114,7 @@ export default {
   },
   methods: {
     textClickHandler(e) {
-      if (this.arrowType) {
+      if (this.arrowType && !this.disabled) {
         this.$emit('tap', e);
       }
     },
@@ -112,11 +125,11 @@ export default {
           if (resData.length > 0) {
             if (this.type === 'dish') {
               this.aliasName = resData[0].name + (resData.length > 1 ? `等${resData.length}个` : '');
-              this.imageUrl = resData[0].media[0];
+              this.imageUrl = buildAssetsPath('dishes', resData[0].media[0]);
             }
             else if (this.type === 'category') {
               this.aliasName = resData[0].name + (resData.length > 1 ? `等${resData.length}个` : '');
-              this.imageUrl = resData[0].icon;
+              this.imageUrl = buildAssetsPath('dishes-category', resData[0].icon);
             }
             else if (this.type === 'coupon') {
               this.aliasName = resData[0].name + (resData.length > 1 ? `等${resData.length}个` : '');

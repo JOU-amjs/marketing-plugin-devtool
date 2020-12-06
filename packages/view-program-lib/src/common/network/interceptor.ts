@@ -1,12 +1,16 @@
 /*
  * @Date: 2020-05-28 10:45:51
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-22 11:10:04
+ * @LastEditTime: 2020-09-30 20:53:59
  */
 import { AxiosInstance } from 'axios';
-import { getPlatform, createApiSign } from '../util';
+import { getPlatform } from '../util';
 import globalData from '../../model/global-data';
- 
+import { ApiSign } from 'ycsh6-helper';
+import { apiSign } from '../config';
+
+const as = new ApiSign(apiSign.connectSymbol, apiSign.key);
+
 // 客户端每个接口需要统一传以下参数：
 // 1. timestamp：时间戳，用来验证接口调用时效性的
 // 2. sign：接口参数加密串，用来服务端安全验证的，算法可以看上面的截图
@@ -27,7 +31,7 @@ export default function (request: AxiosInstance) {
     }
 
     Object.assign(args, { platform, timestamp });
-    args.sign = createApiSign(args);
+    args.sign = as.create(args);
     
     config.headers = {
       ...(config.headers || {}),

@@ -11,7 +11,8 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "vant": "^2.10.2",
-    "view-program-lib": "^0.5.2"
+    "view-program-lib": "^0.5.2",
+    "ycsh6-helper": "^0.3.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.4.0",
@@ -19,6 +20,7 @@
     "@vue/cli-service": "~4.4.0",
     "@vue/eslint-config-standard": "^5.1.2",
     "babel-eslint": "^10.1.0",
+    "compression-webpack-plugin": "^6.0.3",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",

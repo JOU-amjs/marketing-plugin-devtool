@@ -3,7 +3,7 @@
     <div class="dish-tag" v-if="data.tag">
       <badge :text="data.tag" :color="dishTagColors" inverted shape="triangle" />
     </div>
-    <van-image fit="cover" lazy-load class="dish-img" v-if="data.media[0]" :src="data.media[0]" />
+    <van-image fit="cover" lazy-load class="dish-img" v-if="data.media[0]" :src="data.media[0] | assetsPath('dishes')" />
     <div class="dish-img" v-else />
     <div class="dish-info">
     	<div class="info-top">

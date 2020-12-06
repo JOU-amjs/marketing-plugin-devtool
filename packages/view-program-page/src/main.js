@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-06-02 15:22:39
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-21 09:19:02
+ * @LastEditTime: 2020-10-26 09:34:50
  */ 
 import App from './App.vue';
 import Error from './Error.vue';
@@ -9,6 +9,7 @@ import EL from 'view-program-lib';
 import { parseKeyParams } from './common/util';
 import { programScriptUrl } from './common/config';
 import * as presetComponent from './preset-components';
+import * as filters from './common/filters';
 import Vant, { Lazyload } from 'vant';
 import 'vant/lib/index.css';
 
@@ -19,6 +20,10 @@ Vue.config.productionTip = false;
 // 将预设的组件注册到全局里
 Object.keys(presetComponent).forEach(name => {
   Vue.component(name, presetComponent[name]);
+});
+// 注册全局过滤器
+Object.keys(filters).forEach(name => {
+  Vue.filter(name, filters[name]);
 });
 
 // 将vant组件作为预设组件库

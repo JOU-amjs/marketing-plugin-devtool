@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-10 16:43:13
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-09-19 11:12:37
+ * @LastEditTime: 2020-11-09 10:50:11
  */ 
 const { join } = require('path');
 const cacheDir = join(__dirname, './.cache');
@@ -20,6 +20,7 @@ exports.paths = {
   serverDirectory: () => `${process.cwd()}/server`,
   mockConfigData: () => `${process.cwd()}/mocks/config-data.json`,
   pluginFile: () => `${process.cwd()}/plugin.json`,
+  descriptionFile: () => `${process.cwd()}/.description`,
   scaffoldingMock: {
     shopInfo: () => `${process.cwd()}/mocks/shop-info.js`,
     userInfo: () => `${process.cwd()}/mocks/user-info.js`,
@@ -67,7 +68,7 @@ exports.moduleUrls = {
   },
   shopfrontOrder: {
     protocol: 'http',
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 18004,
     publicPath: join(distPath, 'shopfront-order'),
   },
