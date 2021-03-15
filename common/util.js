@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-07-17 22:10:30
  * @LastEditors: JOU(wx: huzhen555)
- * @LastEditTime: 2020-08-27 17:47:45
+ * @LastEditTime: 2021-01-28 20:47:15
  */
 const { existsSync } = require('fs');
 const { paths } = require('../config');
@@ -51,9 +51,9 @@ exports.createHashCode = function(str) {
   let hash = 0;
   if (str.length == 0) return hash;
   for (i = 0; i < str.length; i++) {
-      let char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+    let char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
   return hash.toString(16).replace('-', '');
 }
